@@ -1,0 +1,4959 @@
+{
+  "_meta": {
+    "current_month": "2026-06",
+    "previous_month": "2026-05",
+    "timezone": "Asia/Tashkent",
+    "note": "Seed data for SAT-MAKON. 'enrollments' = the spec's Assignment object (unique per student+subject); teacher_id:null means the pair has no teacher and must appear in the admin Unassigned view. Derived values (masked names, assessment means, stream/main ratings, ranks, eligibility) are NOT stored here - the engine computes them by replay.",
+    "mock_auth_password": "mock1234 for every staff account (FAKE - replace with real auth before launch)",
+    "edge_cases": {
+      "stu_freshman": "NEW, joined 2026-06-10 (<=15) -> eligible 2026-07. Has June assessments but NO rank; profile shows 'eligible from 2026-07' banner.",
+      "stu_transfer": "Transfer student, entered as NEW -> settles. Joined 2026-06-20 (>15) -> eligible 2026-08.",
+      "stu_single": "Established, enrolled in Math ONLY -> never on main board; belongs on the (deferred) Math sub-board.",
+      "stu_thin": "Both subjects but English has only 1 assessment -> 1 qualifying stream -> NOT ranked on main board ('strong + thin').",
+      "stu_unassigned": "Enrolled in English with teacher_id:null -> appears in admin Unassigned view; only Math qualifies -> not ranked.",
+      "stu_archived": "archived:true -> off all boards, history preserved.",
+      "stu_01": "Some May Math assessments by tch_former (archived teacher) -> history must still resolve that teacher's name.",
+      "tch_bobur": "Teaches BOTH Math and English (some students appear as two deck cards under this teacher).",
+      "tch_former": "archived:true -> cannot log in / not assignable, but name resolves in past history."
+    }
+  },
+  "config": {
+    "alpha": 0.4,
+    "mid_month_cutoff_day": 15,
+    "stream_min_assessments": 2,
+    "main_board_min_streams": 2,
+    "teacher_self_edit_window_days": 7,
+    "top_n_main_page": 30,
+    "timezone": "Asia/Tashkent",
+    "mask_format": "first_name_last_initial"
+  },
+  "subjects": [
+    {
+      "id": "sub_math",
+      "name": "Mathematics",
+      "archived": false
+    },
+    {
+      "id": "sub_eng",
+      "name": "English",
+      "archived": false
+    }
+  ],
+  "teachers": [
+    {
+      "id": "tch_dilshod",
+      "full_name": "Dilshod Karimov",
+      "username": "dilshod",
+      "password": "mock1234",
+      "role": "teacher",
+      "archived": false
+    },
+    {
+      "id": "tch_nigora",
+      "full_name": "Nigora Yusupova",
+      "username": "nigora",
+      "password": "mock1234",
+      "role": "teacher",
+      "archived": false
+    },
+    {
+      "id": "tch_bobur",
+      "full_name": "Bobur Aliyev",
+      "username": "bobur",
+      "password": "mock1234",
+      "role": "teacher",
+      "archived": false
+    },
+    {
+      "id": "tch_kamola",
+      "full_name": "Kamola Rashidova",
+      "username": "kamola",
+      "password": "mock1234",
+      "role": "teacher",
+      "archived": false
+    },
+    {
+      "id": "tch_former",
+      "full_name": "Sardor Toshmatov",
+      "username": "sardor",
+      "password": "mock1234",
+      "role": "teacher",
+      "archived": true
+    },
+    {
+      "id": "adm_main",
+      "full_name": "Aziza Mirzaeva",
+      "username": "admin",
+      "password": "mock1234",
+      "role": "admin",
+      "archived": false
+    },
+    {
+      "id": "adm_super",
+      "full_name": "Rustam Nazarov",
+      "username": "superadmin",
+      "password": "mock1234",
+      "role": "super_admin",
+      "archived": false
+    }
+  ],
+  "students": [
+    {
+      "id": "stu_01",
+      "full_name": "Aziz Karimov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_02",
+      "full_name": "Malika Yusupova",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_03",
+      "full_name": "Jasur Rakhimov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_04",
+      "full_name": "Dilnoza Abdullaeva",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_05",
+      "full_name": "Sherzod Tashkentov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_06",
+      "full_name": "Kamila Nazarova",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_07",
+      "full_name": "Otabek Saidov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_08",
+      "full_name": "Madina Ergasheva",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_09",
+      "full_name": "Bekzod Yuldashev",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_10",
+      "full_name": "Sevara Mirzaeva",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_11",
+      "full_name": "Akmal Tursunov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_12",
+      "full_name": "Gulnora Sodiqova",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_13",
+      "full_name": "Davron Ismoilov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_14",
+      "full_name": "Nilufar Khalilova",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_15",
+      "full_name": "Shoxrux Bekmurodov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_16",
+      "full_name": "Zarina Umarova",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_17",
+      "full_name": "Farrux Qodirov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_18",
+      "full_name": "Laylo Akbarova",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_19",
+      "full_name": "Islom Rashidov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_20",
+      "full_name": "Dildora Yoqubova",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_21",
+      "full_name": "Temur Olimov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_22",
+      "full_name": "Ruslan Akhmedov",
+      "enrollment_date": "2025-09-02",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_freshman",
+      "full_name": "Asal Tohirova",
+      "enrollment_date": "2026-06-10",
+      "enrollment_status": "new",
+      "eligibility_start": "2026-07",
+      "archived": false
+    },
+    {
+      "id": "stu_transfer",
+      "full_name": "Jahongir Mamatov",
+      "enrollment_date": "2026-06-20",
+      "enrollment_status": "new",
+      "eligibility_start": "2026-08",
+      "archived": false
+    },
+    {
+      "id": "stu_single",
+      "full_name": "Oybek Saidaliyev",
+      "enrollment_date": "2025-11-01",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-11",
+      "archived": false
+    },
+    {
+      "id": "stu_thin",
+      "full_name": "Mohira Tursunova",
+      "enrollment_date": "2025-09-15",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_unassigned",
+      "full_name": "Komron Ergashev",
+      "enrollment_date": "2025-10-01",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": false
+    },
+    {
+      "id": "stu_archived",
+      "full_name": "Feruza Olimova",
+      "enrollment_date": "2025-09-20",
+      "enrollment_status": "established",
+      "eligibility_start": "2025-10",
+      "archived": true
+    }
+  ],
+  "enrollments": [
+    {
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_03",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_03",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_04",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_04",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_05",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_05",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_06",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_06",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_07",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_07",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_08",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_08",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_09",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_09",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_20",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_20",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_21",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_21",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_freshman",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_freshman",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_transfer",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_transfer",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_single",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur"
+    },
+    {
+      "student_id": "stu_thin",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_thin",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    },
+    {
+      "student_id": "stu_unassigned",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola"
+    },
+    {
+      "student_id": "stu_unassigned",
+      "subject_id": "sub_eng",
+      "teacher_id": null
+    },
+    {
+      "student_id": "stu_archived",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod"
+    },
+    {
+      "student_id": "stu_archived",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora"
+    }
+  ],
+  "assessments": [
+    {
+      "id": "ass_0001",
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_former",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0002",
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 9.0,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0003",
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_former",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0004",
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 6.5,
+        "activity": 7.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0005",
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_former",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.5,
+        "activity": 9.5,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0006",
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0007",
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 7.5,
+        "activity": 7.5,
+        "attendance": 9.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0008",
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 8.5,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0009",
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.0,
+        "activity": 9.0,
+        "attendance": 9.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0010",
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.5,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0011",
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 10.0,
+        "activity": 7.5,
+        "attendance": 7.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0012",
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 9.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0013",
+      "student_id": "stu_01",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.5,
+        "activity": 9.0,
+        "attendance": 7.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0014",
+      "student_id": "stu_01",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.5,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0015",
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 10.0,
+        "activity": 7.5,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0016",
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0017",
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0018",
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 8.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0019",
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 6.5,
+        "attendance": 10.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0020",
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.0,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0021",
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.0,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0022",
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.5,
+        "activity": 6.0,
+        "attendance": 9.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0023",
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 10.0,
+        "activity": 9.5,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0024",
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 10.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0025",
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0026",
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.0,
+        "activity": 9.5,
+        "attendance": 9.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0027",
+      "student_id": "stu_02",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 7.5,
+        "activity": 10.0,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0028",
+      "student_id": "stu_02",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.5,
+        "activity": 8.5,
+        "attendance": 8.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0029",
+      "student_id": "stu_03",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0030",
+      "student_id": "stu_03",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 7.5,
+        "activity": 10.0,
+        "attendance": 9.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0031",
+      "student_id": "stu_03",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 9.5,
+        "activity": 8.0,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0032",
+      "student_id": "stu_03",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0033",
+      "student_id": "stu_03",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.5,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0034",
+      "student_id": "stu_03",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 8.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0035",
+      "student_id": "stu_03",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 10.0,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0036",
+      "student_id": "stu_03",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0037",
+      "student_id": "stu_03",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0038",
+      "student_id": "stu_03",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 7.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0039",
+      "student_id": "stu_03",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0040",
+      "student_id": "stu_03",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.5,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0041",
+      "student_id": "stu_04",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 7.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0042",
+      "student_id": "stu_04",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 5.0,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0043",
+      "student_id": "stu_04",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 10.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0044",
+      "student_id": "stu_04",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.0,
+        "activity": 7.0,
+        "attendance": 6.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0045",
+      "student_id": "stu_04",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.0,
+        "activity": 8.0,
+        "attendance": 7.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0046",
+      "student_id": "stu_04",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 9.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0047",
+      "student_id": "stu_04",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.5,
+        "activity": 8.5,
+        "attendance": 8.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0048",
+      "student_id": "stu_04",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 8.5,
+        "attendance": 7.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0049",
+      "student_id": "stu_04",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 8.5,
+        "activity": 5.0,
+        "attendance": 8.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0050",
+      "student_id": "stu_04",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.0,
+        "activity": 6.0,
+        "attendance": 8.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0051",
+      "student_id": "stu_04",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.5,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0052",
+      "student_id": "stu_04",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 6.0,
+        "activity": 7.5,
+        "attendance": 6.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0053",
+      "student_id": "stu_05",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.5,
+        "activity": 6.5,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0054",
+      "student_id": "stu_05",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 9.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0055",
+      "student_id": "stu_05",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.5,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0056",
+      "student_id": "stu_05",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0057",
+      "student_id": "stu_05",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0058",
+      "student_id": "stu_05",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.0,
+        "activity": 9.0,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0059",
+      "student_id": "stu_05",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0060",
+      "student_id": "stu_05",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 10.0,
+        "activity": 7.5,
+        "attendance": 10.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0061",
+      "student_id": "stu_05",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0062",
+      "student_id": "stu_05",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0063",
+      "student_id": "stu_05",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 9.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0064",
+      "student_id": "stu_05",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 10.0,
+        "activity": 7.5,
+        "attendance": 10.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0065",
+      "student_id": "stu_06",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.5,
+        "activity": 8.5,
+        "attendance": 6.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0066",
+      "student_id": "stu_06",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 6.0,
+        "activity": 7.0,
+        "attendance": 7.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0067",
+      "student_id": "stu_06",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 7.0,
+        "activity": 6.0,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0068",
+      "student_id": "stu_06",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.0,
+        "activity": 6.0,
+        "attendance": 8.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0069",
+      "student_id": "stu_06",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 6.5,
+        "activity": 7.5,
+        "attendance": 7.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0070",
+      "student_id": "stu_06",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 7.5,
+        "attendance": 7.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0071",
+      "student_id": "stu_06",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 8.0,
+        "activity": 7.0,
+        "attendance": 9.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0072",
+      "student_id": "stu_06",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 5.0,
+        "activity": 6.0,
+        "attendance": 7.0,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0073",
+      "student_id": "stu_06",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 6.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0074",
+      "student_id": "stu_06",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 6.5,
+        "activity": 6.0,
+        "attendance": 6.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0075",
+      "student_id": "stu_06",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.5,
+        "activity": 7.5,
+        "attendance": 8.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0076",
+      "student_id": "stu_06",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.5,
+        "activity": 6.0,
+        "attendance": 6.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0077",
+      "student_id": "stu_07",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.0,
+        "activity": 4.5,
+        "attendance": 5.5,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0078",
+      "student_id": "stu_07",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 6.0,
+        "activity": 7.0,
+        "attendance": 7.5,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0079",
+      "student_id": "stu_07",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 6.5,
+        "activity": 4.5,
+        "attendance": 6.5,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0080",
+      "student_id": "stu_07",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 5.5,
+        "activity": 4.0,
+        "attendance": 6.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0081",
+      "student_id": "stu_07",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.0,
+        "activity": 4.0,
+        "attendance": 6.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0082",
+      "student_id": "stu_07",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 5.0,
+        "activity": 5.0,
+        "attendance": 5.5,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0083",
+      "student_id": "stu_07",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 7.5,
+        "attendance": 5.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0084",
+      "student_id": "stu_07",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 4.5,
+        "progress": 6.0,
+        "activity": 7.5,
+        "attendance": 5.5,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0085",
+      "student_id": "stu_07",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 4.0,
+        "progress": 5.0,
+        "activity": 6.5,
+        "attendance": 7.0,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0086",
+      "student_id": "stu_07",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 5.0,
+        "activity": 5.5,
+        "attendance": 6.0,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0087",
+      "student_id": "stu_07",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 4.0,
+        "activity": 4.0,
+        "attendance": 7.5,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0088",
+      "student_id": "stu_07",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 6.5,
+        "activity": 5.0,
+        "attendance": 6.0,
+        "behavior": 4.0
+      }
+    },
+    {
+      "id": "ass_0089",
+      "student_id": "stu_08",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.0,
+        "activity": 7.0,
+        "attendance": 8.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0090",
+      "student_id": "stu_08",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 5.5,
+        "activity": 8.5,
+        "attendance": 7.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0091",
+      "student_id": "stu_08",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 7.0,
+        "attendance": 8.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0092",
+      "student_id": "stu_08",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.5,
+        "activity": 7.5,
+        "attendance": 6.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0093",
+      "student_id": "stu_08",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 8.0,
+        "attendance": 6.5,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0094",
+      "student_id": "stu_08",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.5,
+        "activity": 7.5,
+        "attendance": 8.5,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0095",
+      "student_id": "stu_08",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.0,
+        "activity": 6.0,
+        "attendance": 7.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0096",
+      "student_id": "stu_08",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 6.5,
+        "activity": 5.0,
+        "attendance": 9.5,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0097",
+      "student_id": "stu_08",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 6.5,
+        "activity": 6.0,
+        "attendance": 6.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0098",
+      "student_id": "stu_08",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 6.0,
+        "attendance": 7.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0099",
+      "student_id": "stu_08",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.5,
+        "activity": 7.5,
+        "attendance": 7.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0100",
+      "student_id": "stu_08",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 5.5,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0101",
+      "student_id": "stu_09",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 9.5,
+        "activity": 9.5,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0102",
+      "student_id": "stu_09",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 8.0,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0103",
+      "student_id": "stu_09",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 10.0,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0104",
+      "student_id": "stu_09",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 10.0,
+        "activity": 8.5,
+        "attendance": 9.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0105",
+      "student_id": "stu_09",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 10.0,
+        "activity": 10.0,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0106",
+      "student_id": "stu_09",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 8.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0107",
+      "student_id": "stu_09",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 10.0,
+        "activity": 10.0,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0108",
+      "student_id": "stu_09",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.0,
+        "activity": 8.0,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0109",
+      "student_id": "stu_09",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.5,
+        "activity": 10.0,
+        "attendance": 8.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0110",
+      "student_id": "stu_09",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.0,
+        "activity": 7.5,
+        "attendance": 9.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0111",
+      "student_id": "stu_09",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 6.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0112",
+      "student_id": "stu_09",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.5,
+        "activity": 9.5,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0113",
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 10.0,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0114",
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 10.0,
+        "activity": 9.0,
+        "attendance": 9.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0115",
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.0,
+        "activity": 10.0,
+        "attendance": 8.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0116",
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.0,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0117",
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 7.5,
+        "activity": 8.0,
+        "attendance": 8.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0118",
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0119",
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 9.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0120",
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 8.5,
+        "activity": 9.5,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0121",
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 6.5,
+        "activity": 8.5,
+        "attendance": 8.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0122",
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.0,
+        "activity": 7.5,
+        "attendance": 6.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0123",
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 8.0,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0124",
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 9.0,
+        "activity": 8.5,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0125",
+      "student_id": "stu_10",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.5,
+        "activity": 9.0,
+        "attendance": 9.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0126",
+      "student_id": "stu_10",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 7.0,
+        "activity": 10.0,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0127",
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 7.0,
+        "activity": 5.0,
+        "attendance": 6.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0128",
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 6.5,
+        "activity": 6.0,
+        "attendance": 6.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0129",
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 7.0,
+        "activity": 5.0,
+        "attendance": 5.5,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0130",
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 5.5,
+        "activity": 7.5,
+        "attendance": 5.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0131",
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 7.5,
+        "activity": 8.0,
+        "attendance": 8.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0132",
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 6.5,
+        "activity": 6.5,
+        "attendance": 6.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0133",
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 7.0,
+        "activity": 6.0,
+        "attendance": 7.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0134",
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 4.5,
+        "progress": 4.5,
+        "activity": 6.5,
+        "attendance": 8.0,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0135",
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 5.5,
+        "activity": 7.5,
+        "attendance": 6.5,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0136",
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 7.5,
+        "activity": 5.0,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0137",
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 8.0,
+        "activity": 5.5,
+        "attendance": 6.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0138",
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 5.5,
+        "activity": 4.0,
+        "attendance": 5.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0139",
+      "student_id": "stu_11",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.5,
+        "activity": 5.5,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0140",
+      "student_id": "stu_11",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 8.0,
+        "activity": 5.5,
+        "attendance": 4.5,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0141",
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0142",
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 8.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0143",
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0144",
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0145",
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0146",
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0147",
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 10.0,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0148",
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 9.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0149",
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0150",
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.0,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0151",
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0152",
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0153",
+      "student_id": "stu_12",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 10.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0154",
+      "student_id": "stu_12",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.5,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0155",
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 9.0,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0156",
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 8.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0157",
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 9.0,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0158",
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 9.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0159",
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 7.5,
+        "activity": 9.5,
+        "attendance": 9.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0160",
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 10.0,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0161",
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0162",
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 8.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0163",
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.0,
+        "activity": 9.0,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0164",
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 9.5,
+        "activity": 8.0,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0165",
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 7.5,
+        "activity": 9.5,
+        "attendance": 10.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0166",
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 10.0,
+        "activity": 9.0,
+        "attendance": 9.0,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0167",
+      "student_id": "stu_13",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0168",
+      "student_id": "stu_13",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 9.0,
+        "activity": 8.0,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0169",
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.0,
+        "activity": 8.0,
+        "attendance": 8.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0170",
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 10.0,
+        "attendance": 8.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0171",
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.5,
+        "activity": 9.5,
+        "attendance": 8.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0172",
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 8.0,
+        "activity": 8.5,
+        "attendance": 7.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0173",
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0174",
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.0,
+        "activity": 7.5,
+        "attendance": 7.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0175",
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 8.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0176",
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 10.0,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0177",
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 7.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0178",
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.5,
+        "activity": 9.5,
+        "attendance": 8.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0179",
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 7.5,
+        "attendance": 8.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0180",
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 7.0,
+        "activity": 8.0,
+        "attendance": 8.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0181",
+      "student_id": "stu_14",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.0,
+        "activity": 8.5,
+        "attendance": 6.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0182",
+      "student_id": "stu_14",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.5,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0183",
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 10.0,
+        "activity": 10.0,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0184",
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.5,
+        "activity": 10.0,
+        "attendance": 9.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0185",
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0186",
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 8.0,
+        "activity": 10.0,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0187",
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0188",
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0189",
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.0,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0190",
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0191",
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 10.0,
+        "activity": 9.5,
+        "attendance": 7.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0192",
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.5,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0193",
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 10.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0194",
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.5,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0195",
+      "student_id": "stu_15",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 9.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0196",
+      "student_id": "stu_15",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 7.5,
+        "activity": 9.5,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0197",
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 5.5,
+        "activity": 7.0,
+        "attendance": 7.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0198",
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.0,
+        "activity": 6.5,
+        "attendance": 7.0,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0199",
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 6.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0200",
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 6.0,
+        "activity": 6.5,
+        "attendance": 6.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0201",
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 6.5,
+        "activity": 6.0,
+        "attendance": 7.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0202",
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 5.5,
+        "activity": 4.5,
+        "attendance": 6.0,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0203",
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 6.0,
+        "activity": 3.5,
+        "attendance": 6.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0204",
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.5,
+        "activity": 5.0,
+        "attendance": 3.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0205",
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.5,
+        "activity": 5.0,
+        "attendance": 7.5,
+        "behavior": 4.5
+      }
+    },
+    {
+      "id": "ass_0206",
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 6.0,
+        "activity": 6.0,
+        "attendance": 6.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0207",
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.5,
+        "activity": 5.5,
+        "attendance": 6.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0208",
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 4.5,
+        "activity": 6.0,
+        "attendance": 7.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0209",
+      "student_id": "stu_16",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 5.0,
+        "activity": 6.5,
+        "attendance": 5.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0210",
+      "student_id": "stu_16",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.0,
+        "activity": 6.5,
+        "attendance": 5.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0211",
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 7.0,
+        "activity": 6.0,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0212",
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 6.0,
+        "activity": 5.5,
+        "attendance": 7.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0213",
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 5.0,
+        "activity": 5.0,
+        "attendance": 6.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0214",
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 5.0,
+        "activity": 7.0,
+        "attendance": 6.5,
+        "behavior": 4.5
+      }
+    },
+    {
+      "id": "ass_0215",
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 3.5,
+        "activity": 5.5,
+        "attendance": 6.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0216",
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 5.5,
+        "activity": 5.5,
+        "attendance": 8.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0217",
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 7.5,
+        "behavior": 5.0
+      }
+    },
+    {
+      "id": "ass_0218",
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 5.0,
+        "activity": 5.0,
+        "attendance": 5.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0219",
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 5.0,
+        "activity": 7.0,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0220",
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 4.0,
+        "progress": 5.5,
+        "activity": 6.5,
+        "attendance": 7.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0221",
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 6.5,
+        "behavior": 5.5
+      }
+    },
+    {
+      "id": "ass_0222",
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 5.5,
+        "activity": 6.0,
+        "attendance": 6.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0223",
+      "student_id": "stu_17",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 6.0,
+        "activity": 6.5,
+        "attendance": 6.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0224",
+      "student_id": "stu_17",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 5.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0225",
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.5,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0226",
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 6.5,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0227",
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.5,
+        "activity": 9.0,
+        "attendance": 7.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0228",
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 7.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0229",
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 6.0,
+        "attendance": 7.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0230",
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.0,
+        "activity": 6.0,
+        "attendance": 7.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0231",
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.0,
+        "activity": 7.0,
+        "attendance": 7.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0232",
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.5,
+        "activity": 8.5,
+        "attendance": 6.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0233",
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.0,
+        "activity": 8.0,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0234",
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.5,
+        "activity": 7.5,
+        "attendance": 7.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0235",
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0236",
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.0,
+        "activity": 5.5,
+        "attendance": 8.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0237",
+      "student_id": "stu_18",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 6.0,
+        "attendance": 7.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0238",
+      "student_id": "stu_18",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 6.0,
+        "attendance": 7.5,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0239",
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 7.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0240",
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.5,
+        "activity": 7.5,
+        "attendance": 7.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0241",
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.0,
+        "activity": 6.5,
+        "attendance": 8.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0242",
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 7.5,
+        "activity": 7.0,
+        "attendance": 9.0,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0243",
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.0,
+        "activity": 6.5,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0244",
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 5.5,
+        "activity": 8.0,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0245",
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 7.5,
+        "activity": 6.0,
+        "attendance": 8.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0246",
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 5.0,
+        "progress": 8.5,
+        "activity": 8.0,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0247",
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 7.5,
+        "activity": 7.0,
+        "attendance": 7.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0248",
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.5,
+        "activity": 6.0,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0249",
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 8.5,
+        "activity": 6.5,
+        "attendance": 7.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0250",
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 8.5,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0251",
+      "student_id": "stu_19",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 5.5,
+        "activity": 7.0,
+        "attendance": 9.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0252",
+      "student_id": "stu_19",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 7.0,
+        "attendance": 6.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0253",
+      "student_id": "stu_20",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 10.0,
+        "attendance": 6.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0254",
+      "student_id": "stu_20",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.0,
+        "activity": 6.0,
+        "attendance": 8.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0255",
+      "student_id": "stu_20",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.0,
+        "activity": 7.0,
+        "attendance": 7.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0256",
+      "student_id": "stu_20",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.5,
+        "activity": 8.5,
+        "attendance": 6.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0257",
+      "student_id": "stu_20",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 6.0,
+        "activity": 6.0,
+        "attendance": 6.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0258",
+      "student_id": "stu_20",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 7.0,
+        "activity": 7.5,
+        "attendance": 6.5,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0259",
+      "student_id": "stu_20",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.0,
+        "activity": 6.0,
+        "attendance": 8.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0260",
+      "student_id": "stu_20",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.0,
+        "activity": 5.0,
+        "attendance": 7.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0261",
+      "student_id": "stu_20",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 6.5,
+        "activity": 7.5,
+        "attendance": 7.0,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0262",
+      "student_id": "stu_20",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 5.5,
+        "progress": 5.0,
+        "activity": 7.5,
+        "attendance": 7.5,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0263",
+      "student_id": "stu_20",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 7.5,
+        "attendance": 9.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0264",
+      "student_id": "stu_20",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.0,
+        "activity": 7.0,
+        "attendance": 8.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0265",
+      "student_id": "stu_21",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0266",
+      "student_id": "stu_21",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 9.5,
+        "activity": 8.5,
+        "attendance": 8.5,
+        "behavior": 6.0
+      }
+    },
+    {
+      "id": "ass_0267",
+      "student_id": "stu_21",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.5,
+        "activity": 7.0,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0268",
+      "student_id": "stu_21",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.5,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0269",
+      "student_id": "stu_21",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 8.5,
+        "activity": 10.0,
+        "attendance": 8.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0270",
+      "student_id": "stu_21",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 7.5,
+        "activity": 6.5,
+        "attendance": 6.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0271",
+      "student_id": "stu_21",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 9.5,
+        "activity": 6.5,
+        "attendance": 7.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0272",
+      "student_id": "stu_21",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 7.5,
+        "activity": 8.5,
+        "attendance": 9.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0273",
+      "student_id": "stu_21",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 6.5,
+        "activity": 9.5,
+        "attendance": 9.5,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0274",
+      "student_id": "stu_21",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 7.0,
+        "activity": 7.5,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0275",
+      "student_id": "stu_21",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.5,
+        "activity": 6.5,
+        "attendance": 9.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0276",
+      "student_id": "stu_21",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.5,
+        "activity": 8.0,
+        "attendance": 5.0,
+        "behavior": 8.0
+      }
+    },
+    {
+      "id": "ass_0277",
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 8.5,
+        "activity": 6.0,
+        "attendance": 6.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0278",
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 6.5,
+        "attendance": 8.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0279",
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 6.5,
+        "activity": 8.0,
+        "attendance": 8.5,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0280",
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 6.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0281",
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 6.5,
+        "activity": 9.5,
+        "attendance": 9.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0282",
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0283",
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 10.0,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0284",
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 8.0,
+        "activity": 5.5,
+        "attendance": 7.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0285",
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 9.5,
+        "activity": 8.0,
+        "attendance": 6.0,
+        "behavior": 6.5
+      }
+    },
+    {
+      "id": "ass_0286",
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 6.5,
+        "activity": 7.5,
+        "attendance": 9.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0287",
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 6.5,
+        "activity": 9.0,
+        "attendance": 9.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0288",
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 6.5,
+        "progress": 7.5,
+        "activity": 8.0,
+        "attendance": 7.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0289",
+      "student_id": "stu_22",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 7.5,
+        "activity": 7.5,
+        "attendance": 7.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0290",
+      "student_id": "stu_22",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 5.5,
+        "activity": 10.0,
+        "attendance": 7.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0291",
+      "student_id": "stu_freshman",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 8.0,
+        "activity": 7.5,
+        "attendance": 7.5,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0292",
+      "student_id": "stu_freshman",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 6.0,
+        "progress": 8.0,
+        "activity": 7.5,
+        "attendance": 6.5,
+        "behavior": 7.0
+      }
+    },
+    {
+      "id": "ass_0293",
+      "student_id": "stu_freshman",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 7.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0294",
+      "student_id": "stu_freshman",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 6.5,
+        "activity": 6.5,
+        "attendance": 9.0,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0295",
+      "student_id": "stu_transfer",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.0,
+        "activity": 7.5,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0296",
+      "student_id": "stu_single",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 10.0,
+        "activity": 10.0,
+        "attendance": 8.5,
+        "behavior": 9.5
+      }
+    },
+    {
+      "id": "ass_0297",
+      "student_id": "stu_single",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0298",
+      "student_id": "stu_single",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 9.0,
+        "progress": 10.0,
+        "activity": 8.5,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0299",
+      "student_id": "stu_single",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_bobur",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 9.5,
+        "activity": 8.5,
+        "attendance": 9.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0300",
+      "student_id": "stu_thin",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 7.5,
+        "progress": 9.0,
+        "activity": 10.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0301",
+      "student_id": "stu_thin",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.0,
+        "activity": 8.5,
+        "attendance": 7.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0302",
+      "student_id": "stu_thin",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.5,
+        "activity": 9.0,
+        "attendance": 10.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0303",
+      "student_id": "stu_thin",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-06-26T11:00:00+05:00",
+      "scores": {
+        "homework": 9.5,
+        "progress": 9.0,
+        "activity": 8.5,
+        "attendance": 9.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0304",
+      "student_id": "stu_thin",
+      "subject_id": "sub_eng",
+      "teacher_id": "tch_nigora",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.5,
+        "activity": 8.5,
+        "attendance": 8.0,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0305",
+      "student_id": "stu_unassigned",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-05T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 7.5,
+        "activity": 9.0,
+        "attendance": 7.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0306",
+      "student_id": "stu_unassigned",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-12T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 8.0,
+        "activity": 8.0,
+        "attendance": 8.5,
+        "behavior": 8.5
+      }
+    },
+    {
+      "id": "ass_0307",
+      "student_id": "stu_unassigned",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_kamola",
+      "created_at": "2026-06-19T15:00:00+05:00",
+      "scores": {
+        "homework": 10.0,
+        "progress": 7.5,
+        "activity": 8.5,
+        "attendance": 8.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0308",
+      "student_id": "stu_archived",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-08T15:00:00+05:00",
+      "scores": {
+        "homework": 8.0,
+        "progress": 8.5,
+        "activity": 8.0,
+        "attendance": 9.0,
+        "behavior": 9.0
+      }
+    },
+    {
+      "id": "ass_0309",
+      "student_id": "stu_archived",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-15T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 9.0,
+        "activity": 8.0,
+        "attendance": 7.5,
+        "behavior": 10.0
+      }
+    },
+    {
+      "id": "ass_0310",
+      "student_id": "stu_archived",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-22T15:00:00+05:00",
+      "scores": {
+        "homework": 7.0,
+        "progress": 8.5,
+        "activity": 7.5,
+        "attendance": 7.5,
+        "behavior": 7.5
+      }
+    },
+    {
+      "id": "ass_0311",
+      "student_id": "stu_archived",
+      "subject_id": "sub_math",
+      "teacher_id": "tch_dilshod",
+      "created_at": "2026-05-29T15:00:00+05:00",
+      "scores": {
+        "homework": 8.5,
+        "progress": 8.5,
+        "activity": 7.0,
+        "attendance": 8.0,
+        "behavior": 9.5
+      }
+    }
+  ]
+}

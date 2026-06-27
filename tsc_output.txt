@@ -1,0 +1,2 @@
+﻿src/engine/index.ts(34,53): error TS2365: Operator '+' cannot be applied to types 'keyof Scores' and 'number'.
+src/engine/index.ts(35,12): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
