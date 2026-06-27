@@ -51,11 +51,8 @@ export default function StudentShell() {
     const top3 = showPodium ? visibleBoard.slice(0, 3) : [];
     const listEntries = showPodium ? visibleBoard.slice(3) : visibleBoard;
 
-    // Reorder podium: [Rank 2, Rank 1, Rank 3]
-    const podiumOrder: BoardEntry[] = [];
-    if (top3[1]) podiumOrder.push(top3[1]);
-    if (top3[0]) podiumOrder.push(top3[0]);
-    if (top3[2]) podiumOrder.push(top3[2]);
+    // Podium array remains in rank order, visual reordering happens via CSS Flex 'order-' classes
+    const podiumOrder = top3;
 
     return (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in">
@@ -148,7 +145,7 @@ export default function StudentShell() {
 
             {/* Podium (Top 3) */}
             {!isSearching && top3.length > 0 && (
-                <div className="flex flex-col sm:flex-row items-end justify-center gap-4 sm:gap-6 lg:gap-8 mb-16 animate-slide-up">
+                <div className="flex flex-col sm:flex-row items-center sm:items-end justify-center gap-6 lg:gap-8 mb-16 animate-slide-up w-full">
                     {podiumOrder.map((entry) => (
                         <PodiumCard key={entry.student_id} entry={entry} />
                     ))}
@@ -200,17 +197,17 @@ function PodiumCard({ entry }: { entry: BoardEntry }) {
     const isSecond = entry.rank === 2;
     const isThird = entry.rank === 3;
 
-    let containerClasses = "relative bg-white rounded-3xl border flex flex-col items-center justify-between p-6 sm:w-64 transition-transform hover:-translate-y-1 ";
+    let containerClasses = "relative bg-white rounded-3xl border flex flex-col items-center justify-between p-6 w-full max-w-sm sm:w-64 transition-transform hover:-translate-y-1 ";
     let medal = '';
 
     if (isFirst) {
-        containerClasses += "border-yellow-300 shadow-[0_0_40px_-5px_rgba(250,204,21,0.4)] sm:h-80 z-10 sm:-mt-8";
+        containerClasses += "border-yellow-300 shadow-[0_0_40px_-5px_rgba(250,204,21,0.4)] sm:h-80 z-10 sm:-mt-8 order-1 sm:order-2";
         medal = '🥇';
     } else if (isSecond) {
-        containerClasses += "border-slate-300 shadow-card sm:h-72 order-first sm:order-none";
+        containerClasses += "border-slate-300 shadow-card sm:h-72 order-2 sm:order-1";
         medal = '🥈';
     } else if (isThird) {
-        containerClasses += "border-amber-600/30 shadow-card sm:h-64";
+        containerClasses += "border-amber-600/30 shadow-card sm:h-64 order-3 sm:order-3";
         medal = '🥉';
     }
 
