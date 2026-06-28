@@ -14,6 +14,12 @@ import type {
     Scores,
 } from '@/data/types';
 
+export interface AssignResult {
+    enrollment: Enrollment;
+    wasReassigned: boolean;
+    previousTeacherId: string | null;
+}
+
 /** Typed data repository interface — the single access point for all data */
 export interface IDataRepository {
     // ----- Read: Entities -----
@@ -56,9 +62,9 @@ export interface IDataRepository {
     updateStudent(id: string, updates: Partial<Student>): Student | null;
     archiveStudent(id: string): boolean;
 
-    addTeacher(teacher: Omit<Teacher, 'id'>): Teacher;
-    updateTeacher(id: string, updates: Partial<Teacher>): Teacher | null;
-    archiveTeacher(id: string): boolean;
+    addTeacher(teacher: Omit<Teacher, 'id'>, actor: Teacher): Teacher;
+    updateTeacher(id: string, updates: Partial<Teacher>, actor: Teacher): Teacher | null;
+    archiveTeacher(id: string, actor: Teacher): boolean;
 
     addSubject(subject: Omit<Subject, 'id'>): Subject;
     updateSubject(id: string, updates: Partial<Subject>): Subject | null;
@@ -66,4 +72,7 @@ export interface IDataRepository {
 
     setEnrollmentTeacher(studentId: string, subjectId: string, teacherId: string | null): Enrollment | null;
     addEnrollment(enrollment: Enrollment): Enrollment;
+    assignStudentToTeacher(studentId: string, subjectId: string, teacherId: string): AssignResult;
+
+    isUsernameAvailable(username: string, excludeId?: string): boolean;
 }

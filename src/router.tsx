@@ -9,6 +9,7 @@ import StudentShell from '@/pages/student/StudentShell';
 import StudentProfile from '@/pages/student/StudentProfile';
 import StaffShell from '@/pages/staff/StaffShell';
 import AdminShell from '@/pages/admin/AdminShell';
+import RequireRole from '@/components/RequireRole';
 
 function WithLayout({ children }: { children: React.ReactNode }) {
     return <Layout>{children}</Layout>;
@@ -35,7 +36,9 @@ export const router = createBrowserRouter([
         path: '/staff',
         element: (
             <WithLayout>
-                <StaffShell />
+                <RequireRole allowedRoles={['teacher']} redirectTo="/admin">
+                    <StaffShell />
+                </RequireRole>
             </WithLayout>
         ),
     },
@@ -43,7 +46,9 @@ export const router = createBrowserRouter([
         path: '/admin',
         element: (
             <WithLayout>
-                <AdminShell />
+                <RequireRole allowedRoles={['admin', 'super_admin']}>
+                    <AdminShell />
+                </RequireRole>
             </WithLayout>
         ),
     },

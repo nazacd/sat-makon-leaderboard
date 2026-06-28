@@ -1,32 +1,26 @@
 import { useState, useMemo } from 'react';
 import { useData } from '@/services/DataProvider';
+import { useAuth } from '@/services/AuthProvider';
 import { buildMainBoard, formatFailureReason, computeEligibilityStart } from '@/engine';
-import type { Teacher, Student, Subject, Enrollment, Config } from '@/data/types';
+import { canManageStaff, canArchiveStaff } from '@/services/permissions';
+import Modal from '@/components/Modal';
+import ChangeCredentialsModal from '@/components/ChangeCredentialsModal';
+import { logAction, getAuditLog } from '@/services/auditLog';
+import type { Teacher, Student, Subject } from '@/data/types';
+import RosterModal from '@/pages/admin/RosterModal';
 
-// ===== Simple in-memory audit log =====
-interface AuditEntry {
-    timestamp: string;
-    actor: string;
-    action: string;
-    target: string;
-    before?: string;
-    after?: string;
-}
-
-const auditLog: AuditEntry[] = [];
-
-function logAction(actor: string, action: string, target: string, before?: string, after?: string) {
-    auditLog.unshift({
-        timestamp: new Date().toISOString(),
-        actor, action, target, before, after,
-    });
-}
+// ===== Shared button style helpers =====
+const btnEdit = 'px-3 py-1.5 text-xs font-semibold rounded-lg border border-neutral-200 bg-white hover:border-primary-400 hover:text-primary-600 text-neutral-600 transition-colors';
+const btnDanger = 'px-3 py-1.5 text-xs font-semibold rounded-lg border border-neutral-200 bg-white hover:border-error-400 hover:text-error-600 text-neutral-600 transition-colors';
+const btnRoster = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-primary-50 border border-primary-200 text-primary-700 hover:bg-primary-100 transition-colors';
 
 // ===== Admin Views =====
 type AdminView = 'overview' | 'students' | 'teachers' | 'subjects' | 'assessments' | 'audit';
 
 export default function AdminShell() {
+    const { session, logout } = useAuth();
     const [view, setView] = useState<AdminView>('overview');
+    const [showCredentials, setShowCredentials] = useState(false);
 
     const tabs: { key: AdminView; label: string; icon: string }[] = [
         { key: 'overview', label: 'Overview', icon: '📊' },
@@ -38,16 +32,25 @@ export default function AdminShell() {
     ];
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-8 animate-fade-in">
             {/* Header */}
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-4">
-                    <span className="w-2 h-2 rounded-full bg-error-500" />
-                    Role-Gated · Admin Only
+            <div className="flex justify-between items-start mb-8">
+                <div>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-4">
+                        <span className="w-2 h-2 rounded-full bg-error-500" />
+                        {session?.role === 'super_admin' ? 'Super Admin' : 'Admin'} · {session?.full_name}
+                    </div>
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-neutral-900 tracking-tight">
+                        Admin <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">Dashboard</span>
+                    </h1>
                 </div>
-                <h1 className="text-4xl sm:text-5xl font-extrabold text-neutral-900 tracking-tight">
-                    Admin <span className="bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">Dashboard</span>
-                </h1>
+                <div className="flex items-center gap-2 mt-2">
+                    <button onClick={() => setShowCredentials(true)}
+                        className="px-4 py-2 text-sm font-semibold border border-neutral-200 bg-white text-neutral-600 rounded-xl hover:border-primary-400 hover:text-primary-600 transition-colors">
+                        Change Credentials
+                    </button>
+                    <button onClick={logout} className={btnDanger}>Sign Out</button>
+                </div>
             </div>
 
             {/* Tab Navigation */}
@@ -67,6 +70,10 @@ export default function AdminShell() {
             {view === 'subjects' && <SubjectsView />}
             {view === 'assessments' && <AssessmentsView />}
             {view === 'audit' && <AuditView />}
+
+            {showCredentials && session && (
+                <ChangeCredentialsModal teacher={session} onClose={() => setShowCredentials(false)} />
+            )}
         </div>
     );
 }
@@ -75,27 +82,22 @@ export default function AdminShell() {
 function OverviewView() {
     const data = useData();
     const students = data.getStudents(true);
-    const teachers = data.getTeachers();
+    const teachers = data.getTeachers().filter(t => t.role === 'teacher');
     const subjects = data.getSubjects();
     const unassigned = data.getUnassignedEnrollments();
     const config = data.getConfig();
 
     return (
         <div className="space-y-8">
-            {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <StatCard icon="👥" value={students.filter(s => !s.archived).length} label="Active Students" />
                 <StatCard icon="🎓" value={teachers.length} label="Teachers" />
                 <StatCard icon="📚" value={subjects.length} label="Subjects" />
                 <StatCard icon="⚠️" value={unassigned.length} label="Unassigned Pairs" accent />
             </div>
-
-            {/* Unassigned Queue */}
             <UnassignedQueue />
-
-            {/* Config */}
             <div className="bg-neutral-900 rounded-3xl p-8 border border-neutral-800 text-neutral-100 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-600 rounded-full blur-3xl opacity-20 pointer-events-none translate-x-10 -translate-y-10"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary-600 rounded-full blur-3xl opacity-20 pointer-events-none translate-x-10 -translate-y-10" />
                 <h2 className="text-xl font-bold text-white mb-6">⚙️ Engine Configuration</h2>
                 <div className="space-y-4">
                     <CfgRow label="EWMA Alpha" value={config.alpha} />
@@ -135,7 +137,7 @@ function CfgRow({ label, value }: { label: string; value: string | number }) {
 function UnassignedQueue() {
     const data = useData();
     const unassigned = data.getUnassignedEnrollments();
-    const teachers = data.getTeachers();
+    const teachers = data.getTeachers().filter(t => t.role === 'teacher');
     const [assignments, setAssignments] = useState<Record<string, string>>({});
 
     const handleAssign = (studentId: string, subjectId: string) => {
@@ -158,7 +160,7 @@ function UnassignedQueue() {
 
     return (
         <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
-            <div className="bg-warning-50 px-6 py-4 border-b border-warning-200 flex justify-between items-center">
+            <div className="bg-warning-50 px-6 py-4 border-b border-warning-200">
                 <h2 className="font-bold text-warning-800">⚠️ Unassigned Pairs ({unassigned.length})</h2>
             </div>
             <div className="p-6 space-y-3">
@@ -192,32 +194,34 @@ function UnassignedQueue() {
     );
 }
 
-// ===== Students CRUD (§7.1) =====
+// ===== Students CRUD =====
 function StudentsView() {
     const data = useData();
+    const { session } = useAuth();
     const students = data.getStudents(true);
     const enrollments = data.getEnrollments();
     const assessments = data.getAssessments();
     const config = data.getConfig();
     const currentMonth = data.getCurrentMonth();
     const subjects = data.getSubjects();
-    const teachers = data.getTeachers(true);
+    const teachers = data.getTeachers().filter(t => t.role === 'teacher');
 
-    // Compute live board for ranks and eligibility (§4.3)
     const { board, ineligible } = useMemo(() => {
         return buildMainBoard(data.getStudents(), enrollments, assessments, currentMonth, config);
     }, [students, enrollments, assessments, currentMonth, config]);
-
     const allEntries = [...board, ...ineligible];
 
-    // Add student form
-    const [showAddForm, setShowAddForm] = useState(false);
+    // Add modal state
+    const [showAdd, setShowAdd] = useState(false);
     const [newName, setNewName] = useState('');
     const [newStatus, setNewStatus] = useState<'new' | 'established'>('new');
-    const [editingId, setEditingId] = useState<string | null>(null);
-    const [editName, setEditName] = useState('');
+    const [subjectTeachers, setSubjectTeachers] = useState<Record<string, string>>({});
 
-    // Filter / search
+    // Edit modal state
+    const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+    const [editName, setEditName] = useState('');
+    const [editTeacherMap, setEditTeacherMap] = useState<Record<string, string | null>>({});
+
     const [filter, setFilter] = useState('');
     const filteredStudents = students.filter(s => s.full_name.toLowerCase().includes(filter.toLowerCase()));
 
@@ -232,21 +236,62 @@ function StudentsView() {
             eligibility_start: eligStart,
             archived: false,
         });
-        logAction('admin', 'add_student', student.id, undefined, `${newName} (${newStatus})`);
-        setNewName(''); setShowAddForm(false);
+        logAction(session?.full_name ?? 'admin', 'add_student', student.id, undefined, `${newName} (${newStatus})`);
+        for (const [subjectId, teacherId] of Object.entries(subjectTeachers)) {
+            if (teacherId) {
+                data.assignStudentToTeacher(student.id, subjectId, teacherId);
+                logAction(session?.full_name ?? 'admin', 'assign_teacher_on_create', `${student.id}/${subjectId}`, undefined, teacherId);
+            }
+        }
+        setNewName(''); setNewStatus('new'); setSubjectTeachers({}); setShowAdd(false);
     };
 
     const handleArchive = (s: Student) => {
         if (!confirm(`Archive ${s.full_name}? They will be removed from the live board.`)) return;
         data.archiveStudent(s.id);
-        logAction('admin', 'archive_student', s.id, 'active', 'archived');
+        logAction(session?.full_name ?? 'admin', 'archive_student', s.id, 'active', 'archived');
+    };
+
+    const openEditModal = (s: Student) => {
+        const enrs = data.getEnrollmentsForStudent(s.id);
+        const map: Record<string, string | null> = {};
+        for (const e of enrs) map[e.subject_id] = e.teacher_id;
+        setEditingStudent(s);
+        setEditName(s.full_name);
+        setEditTeacherMap(map);
+    };
+
+    const handleMakeEligibleNow = () => {
+        if (!editingStudent) return;
+        const updated = data.updateStudent(editingStudent.id, { eligibility_start: currentMonth });
+        if (updated) {
+            logAction(session?.full_name ?? 'admin', 'instant_eligibility', editingStudent.id, editingStudent.eligibility_start, currentMonth);
+            setEditingStudent(updated);
+        }
     };
 
     const handleSaveEdit = () => {
-        if (!editingId || !editName.trim()) return;
-        data.updateStudent(editingId, { full_name: editName.trim() });
-        logAction('admin', 'edit_student', editingId, undefined, editName.trim());
-        setEditingId(null);
+        if (!editingStudent || !editName.trim()) return;
+
+        if (editName.trim() !== editingStudent.full_name) {
+            data.updateStudent(editingStudent.id, { full_name: editName.trim() });
+            logAction(session?.full_name ?? 'admin', 'edit_student_name', editingStudent.id, editingStudent.full_name, editName.trim());
+        }
+
+        // Persist teacher assignment changes
+        const original = data.getEnrollmentsForStudent(editingStudent.id);
+        for (const [subjectId, newTid] of Object.entries(editTeacherMap)) {
+            const origTid = original.find(e => e.subject_id === subjectId)?.teacher_id ?? null;
+            if (newTid !== origTid) {
+                data.setEnrollmentTeacher(editingStudent.id, subjectId, newTid);
+                const prevTname = origTid ? (data.getTeacher(origTid)?.full_name ?? origTid) : 'Unassigned';
+                const newTname = newTid ? (data.getTeacher(newTid)?.full_name ?? newTid) : 'Unassigned';
+                logAction(session?.full_name ?? 'admin', 'reassign_teacher',
+                    `${editingStudent.full_name}/${subjectId}`, prevTname, newTname);
+            }
+        }
+
+        setEditingStudent(null);
     };
 
     return (
@@ -255,37 +300,146 @@ function StudentsView() {
             <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <input type="text" placeholder="Filter students..." value={filter} onChange={e => setFilter(e.target.value)}
                     className="px-4 py-2 rounded-xl border border-neutral-200 bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none" />
-                <button onClick={() => setShowAddForm(!showAddForm)}
+                <button onClick={() => setShowAdd(true)}
                     className="px-5 py-2 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors">
                     + Add Student
                 </button>
             </div>
 
-            {/* Add Form (§7.1: New/Established control) */}
-            {showAddForm && (
-                <div className="bg-primary-50 rounded-2xl border border-primary-200 p-6 space-y-4 animate-fade-in">
-                    <h3 className="font-bold text-primary-800 text-lg">Add New Student</h3>
-                    <input type="text" placeholder="Full name" value={newName} onChange={e => setNewName(e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border border-primary-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
-                    <div className="flex gap-4">
-                        <label className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer ${newStatus === 'new' ? 'border-primary-500 bg-primary-100 text-primary-800 font-bold' : 'border-neutral-200 text-neutral-600'}`}>
-                            <input type="radio" name="status" value="new" checked={newStatus === 'new'} onChange={() => setNewStatus('new')} className="accent-primary-600" />
-                            New Student <span className="text-xs font-normal">(settles from join date)</span>
-                        </label>
-                        <label className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer ${newStatus === 'established' ? 'border-primary-500 bg-primary-100 text-primary-800 font-bold' : 'border-neutral-200 text-neutral-600'}`}>
-                            <input type="radio" name="status" value="established" checked={newStatus === 'established'} onChange={() => setNewStatus('established')} className="accent-primary-600" />
-                            Established <span className="text-xs font-normal">(eligible immediately)</span>
-                        </label>
+            {/* Add Student Modal */}
+            {showAdd && (
+                <Modal
+                    title="Add New Student"
+                    onClose={() => { setShowAdd(false); setNewName(''); setSubjectTeachers({}); }}
+                    maxWidth="max-w-lg"
+                    footer={
+                        <>
+                            <button onClick={() => { setShowAdd(false); setNewName(''); setSubjectTeachers({}); }}
+                                className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">
+                                Cancel
+                            </button>
+                            <button onClick={handleAddStudent} disabled={!newName.trim()}
+                                className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-bold rounded-xl hover:bg-primary-700">
+                                Save Student
+                            </button>
+                        </>
+                    }
+                >
+                    <div className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Full Name</label>
+                            <input type="text" placeholder="Full name" value={newName} onChange={e => setNewName(e.target.value)}
+                                className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-neutral-700 mb-2">Enrollment Type</label>
+                            <div className="flex gap-3">
+                                {(['new', 'established'] as const).map(s => (
+                                    <label key={s} className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer flex-1 ${newStatus === s ? 'border-primary-500 bg-primary-50 text-primary-800 font-bold' : 'border-neutral-200 text-neutral-600'}`}>
+                                        <input type="radio" name="status" value={s} checked={newStatus === s} onChange={() => setNewStatus(s)} className="accent-primary-600" />
+                                        {s === 'new' ? 'New' : 'Established'}
+                                    </label>
+                                ))}
+                            </div>
+                            <p className="text-xs text-neutral-400 mt-1.5">
+                                {newStatus === 'new' ? 'Settles from join date (mid-month cutoff applies).' : 'Eligible immediately.'}
+                            </p>
+                        </div>
+                        {subjects.length > 0 && (
+                            <div>
+                                <label className="block text-sm font-semibold text-neutral-700 mb-2">Assign to Subjects (optional)</label>
+                                <div className="space-y-2">
+                                    {subjects.map(sub => (
+                                        <div key={sub.id} className="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 bg-neutral-50">
+                                            <span className="text-sm font-medium text-neutral-700 w-28 shrink-0">{sub.name}</span>
+                                            <select
+                                                value={subjectTeachers[sub.id] ?? ''}
+                                                onChange={e => setSubjectTeachers(prev => ({ ...prev, [sub.id]: e.target.value }))}
+                                                className="flex-1 bg-white border border-neutral-200 text-neutral-700 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                                            >
+                                                <option value="">— Unassigned —</option>
+                                                {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
+                                            </select>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <div className="flex gap-3">
-                        <button onClick={handleAddStudent} disabled={!newName.trim()}
-                            className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 text-white font-bold rounded-xl hover:bg-primary-700">Save</button>
-                        <button onClick={() => setShowAddForm(false)} className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl">Cancel</button>
-                    </div>
-                </div>
+                </Modal>
             )}
 
-            {/* Student List */}
+            {/* Edit Student Modal */}
+            {editingStudent && (
+                <Modal
+                    title="Edit Student"
+                    onClose={() => setEditingStudent(null)}
+                    maxWidth="max-w-lg"
+                    footer={
+                        <>
+                            <button onClick={() => setEditingStudent(null)}
+                                className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">
+                                Cancel
+                            </button>
+                            <button onClick={handleSaveEdit} disabled={!editName.trim()}
+                                className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-bold rounded-xl hover:bg-primary-700">
+                                Save
+                            </button>
+                        </>
+                    }
+                >
+                    <div className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Full Name</label>
+                            <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                                className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                        </div>
+
+                        {Object.keys(editTeacherMap).length > 0 && (
+                            <div>
+                                <label className="block text-sm font-semibold text-neutral-700 mb-2">Teacher Assignments</label>
+                                <div className="space-y-2">
+                                    {subjects.map(sub => {
+                                        if (!Object.prototype.hasOwnProperty.call(editTeacherMap, sub.id)) return null;
+                                        return (
+                                            <div key={sub.id} className="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 bg-neutral-50">
+                                                <span className="text-sm font-medium text-neutral-700 w-28 shrink-0">{sub.name}</span>
+                                                <select
+                                                    value={editTeacherMap[sub.id] ?? ''}
+                                                    onChange={e => setEditTeacherMap(prev => ({
+                                                        ...prev,
+                                                        [sub.id]: e.target.value || null,
+                                                    }))}
+                                                    className="flex-1 bg-white border border-neutral-200 text-neutral-700 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                                                >
+                                                    <option value="">— Unassigned —</option>
+                                                    {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
+                                                </select>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {editingStudent.eligibility_start > currentMonth && (
+                            <div className="p-4 rounded-xl border border-warning-200 bg-warning-50">
+                                <p className="text-sm font-semibold text-warning-800 mb-1">Student is settling</p>
+                                <p className="text-xs text-warning-700 mb-3">
+                                    Eligible from <span className="font-mono font-bold">{editingStudent.eligibility_start}</span>.
+                                    Overriding sets eligibility to <span className="font-mono font-bold">{currentMonth}</span> immediately — cannot be undone.
+                                </p>
+                                <button onClick={handleMakeEligibleNow}
+                                    className="px-4 py-2 text-sm font-bold rounded-lg bg-warning-600 hover:bg-warning-700 text-white transition-colors">
+                                    Make Eligible Now
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </Modal>
+            )}
+
+            {/* Student Table */}
             <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -306,19 +460,8 @@ function StudentsView() {
                                 return (
                                     <tr key={s.id} className={`hover:bg-neutral-50 ${s.archived ? 'opacity-50' : ''}`}>
                                         <td className="px-4 py-3">
-                                            {editingId === s.id ? (
-                                                <div className="flex gap-2">
-                                                    <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
-                                                        className="px-2 py-1 rounded border border-neutral-300 text-sm w-40" />
-                                                    <button onClick={handleSaveEdit} className="text-primary-600 text-sm font-bold">Save</button>
-                                                    <button onClick={() => setEditingId(null)} className="text-neutral-400 text-sm">Cancel</button>
-                                                </div>
-                                            ) : (
-                                                <div>
-                                                    <span className="font-semibold text-neutral-800">{s.full_name}</span>
-                                                    {s.archived && <span className="ml-2 text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded">Archived</span>}
-                                                </div>
-                                            )}
+                                            <span className="font-semibold text-neutral-800">{s.full_name}</span>
+                                            {s.archived && <span className="ml-2 text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded">Archived</span>}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`text-xs font-bold px-2 py-1 rounded ${s.enrollment_status === 'new' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'}`}>
@@ -329,24 +472,23 @@ function StudentsView() {
                                             <div className="space-y-1">
                                                 {studentEnrollments.map(e => {
                                                     const sub = subjects.find(x => x.id === e.subject_id);
-                                                    const tch = e.teacher_id ? teachers.find(x => x.id === e.teacher_id) : null;
+                                                    const tch = e.teacher_id ? data.getTeacher(e.teacher_id) : null;
                                                     return (
                                                         <div key={`${e.student_id}-${e.subject_id}`} className="text-xs">
                                                             <span className="font-semibold text-primary-700">{sub?.name ?? e.subject_id}</span>
-                                                            <span className="text-neutral-400 ml-1">→ {tch?.full_name ?? (e.teacher_id ? 'Unknown' : <span className="text-warning-600 font-bold">Unassigned</span>)}</span>
+                                                            <span className="text-neutral-400 ml-1">
+                                                                → {tch?.full_name ?? (e.teacher_id ? 'Unknown' : <span className="text-warning-600 font-bold">Unassigned</span>)}
+                                                            </span>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            {entry?.eligibility.eligible ? (
-                                                <span className="font-bold text-primary-700">#{entry.rank}</span>
-                                            ) : (
-                                                <span className="text-neutral-400">—</span>
-                                            )}
+                                            {entry?.eligibility.eligible
+                                                ? <span className="font-bold text-primary-700">#{entry.rank}</span>
+                                                : <span className="text-neutral-400">—</span>}
                                         </td>
-                                        {/* §4.3 Failure reason surfacing */}
                                         <td className="px-4 py-3">
                                             {entry?.eligibility.eligible ? (
                                                 <span className="text-xs bg-success-50 text-success-700 px-2 py-1 rounded font-semibold">Eligible</span>
@@ -363,16 +505,12 @@ function StudentsView() {
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex gap-2">
-                                                {!s.archived && (
-                                                    <>
-                                                        <button onClick={() => { setEditingId(s.id); setEditName(s.full_name); }}
-                                                            className="text-neutral-500 hover:text-primary-600 text-xs font-semibold">Edit</button>
-                                                        <button onClick={() => handleArchive(s)}
-                                                            className="text-neutral-500 hover:text-error-600 text-xs font-semibold">Archive</button>
-                                                    </>
-                                                )}
-                                            </div>
+                                            {!s.archived && (
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => openEditModal(s)} className={btnEdit}>Edit</button>
+                                                    <button onClick={() => handleArchive(s)} className={btnDanger}>Archive</button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 );
@@ -385,164 +523,472 @@ function StudentsView() {
     );
 }
 
-// ===== Teachers CRUD (§7.2) =====
+// ===== Teachers CRUD — RBAC-aware =====
 function TeachersView() {
+    const { session } = useAuth();
     const data = useData();
-    const teachers = data.getTeachers(true);
+    const allTeachers = data.getTeachers(true);
     const enrollments = data.getEnrollments();
     const subjects = data.getSubjects();
-    const students = data.getStudents();
 
-    const [showAdd, setShowAdd] = useState(false);
-    const [newName, setNewName] = useState('');
-    const [newRole, setNewRole] = useState<'teacher' | 'admin'>('teacher');
+    const actor = session!;
+    const isSuperAdmin = actor.role === 'super_admin';
 
-    const handleAdd = () => {
-        if (!newName.trim()) return;
-        const username = newName.trim().toLowerCase().replace(/\s+/g, '.');
-        const teacher = data.addTeacher({
-            full_name: newName.trim(), username, password: 'mock123',
-            role: newRole, archived: false,
-        });
-        logAction('admin', 'add_teacher', teacher.id, undefined, newName.trim());
-        setNewName(''); setShowAdd(false);
+    const teacherAccounts = allTeachers.filter(t => t.role === 'teacher');
+    const adminAccounts = allTeachers.filter(t => t.role === 'admin' || t.role === 'super_admin');
+
+    // Add Teacher modal state
+    const [showAddTeacher, setShowAddTeacher] = useState(false);
+    const [newTeacherName, setNewTeacherName] = useState('');
+    const [newTeacherUsername, setNewTeacherUsername] = useState('');
+    const [newTeacherPassword, setNewTeacherPassword] = useState('');
+    const [newTeacherConfirmPw, setNewTeacherConfirmPw] = useState('');
+    const [teacherUsernameEdited, setTeacherUsernameEdited] = useState(false);
+    const [addTeacherError, setAddTeacherError] = useState<string | null>(null);
+
+    // Add Admin modal state
+    const [showAddAdmin, setShowAddAdmin] = useState(false);
+    const [newAdminName, setNewAdminName] = useState('');
+    const [newAdminRole, setNewAdminRole] = useState<'admin' | 'super_admin'>('admin');
+    const [newAdminUsername, setNewAdminUsername] = useState('');
+    const [newAdminPassword, setNewAdminPassword] = useState('');
+    const [newAdminConfirmPw, setNewAdminConfirmPw] = useState('');
+    const [adminUsernameEdited, setAdminUsernameEdited] = useState(false);
+    const [addAdminError, setAddAdminError] = useState<string | null>(null);
+
+    const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+    const [editTeacherName, setEditTeacherName] = useState('');
+
+    const [rosterTeacher, setRosterTeacher] = useState<Teacher | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const resetAddTeacher = () => {
+        setNewTeacherName(''); setNewTeacherUsername(''); setNewTeacherPassword('');
+        setNewTeacherConfirmPw(''); setTeacherUsernameEdited(false); setAddTeacherError(null);
+    };
+
+    const resetAddAdmin = () => {
+        setNewAdminName(''); setNewAdminUsername(''); setNewAdminPassword('');
+        setNewAdminConfirmPw(''); setAdminUsernameEdited(false); setAddAdminError(null);
+    };
+
+    const handleAddTeacher = () => {
+        if (!newTeacherName.trim()) return;
+        const trimmedUsername = newTeacherUsername.trim();
+        if (!trimmedUsername) { setAddTeacherError('Username is required.'); return; }
+        if (/\s/.test(trimmedUsername)) { setAddTeacherError('Username must not contain spaces.'); return; }
+        if (newTeacherPassword.length < 6) { setAddTeacherError('Password must be at least 6 characters.'); return; }
+        if (newTeacherPassword !== newTeacherConfirmPw) { setAddTeacherError('Passwords do not match.'); return; }
+        if (!data.isUsernameAvailable(trimmedUsername)) { setAddTeacherError(`Username "${trimmedUsername}" is already taken.`); return; }
+        try {
+            const teacher = data.addTeacher(
+                { full_name: newTeacherName.trim(), username: trimmedUsername, password: newTeacherPassword, role: 'teacher', archived: false },
+                actor,
+            );
+            logAction(actor.full_name, 'add_teacher', teacher.id, undefined, `${newTeacherName.trim()} (@${trimmedUsername})`);
+            resetAddTeacher(); setShowAddTeacher(false); setError(null);
+        } catch (e: any) { setAddTeacherError(e.message); }
+    };
+
+    const handleAddAdmin = () => {
+        if (!newAdminName.trim()) return;
+        const trimmedUsername = newAdminUsername.trim();
+        if (!trimmedUsername) { setAddAdminError('Username is required.'); return; }
+        if (/\s/.test(trimmedUsername)) { setAddAdminError('Username must not contain spaces.'); return; }
+        if (newAdminPassword.length < 6) { setAddAdminError('Password must be at least 6 characters.'); return; }
+        if (newAdminPassword !== newAdminConfirmPw) { setAddAdminError('Passwords do not match.'); return; }
+        if (!data.isUsernameAvailable(trimmedUsername)) { setAddAdminError(`Username "${trimmedUsername}" is already taken.`); return; }
+        try {
+            const teacher = data.addTeacher(
+                { full_name: newAdminName.trim(), username: trimmedUsername, password: newAdminPassword, role: newAdminRole, archived: false },
+                actor,
+            );
+            logAction(actor.full_name, 'add_admin', teacher.id, undefined, `${newAdminName.trim()} (@${trimmedUsername}, ${newAdminRole})`);
+            resetAddAdmin(); setShowAddAdmin(false); setError(null);
+        } catch (e: any) { setAddAdminError(e.message); }
+    };
+
+    const handleSaveEdit = () => {
+        if (!editingTeacher || !editTeacherName.trim()) return;
+        try {
+            data.updateTeacher(editingTeacher.id, { full_name: editTeacherName.trim() }, actor);
+            logAction(actor.full_name, 'edit_teacher', editingTeacher.id, editingTeacher.full_name, editTeacherName.trim());
+            setEditingTeacher(null); setError(null);
+        } catch (e: any) { setError(e.message); }
     };
 
     const handleArchive = (t: Teacher) => {
+        const check = canArchiveStaff(actor, t, allTeachers);
+        if (!check.allowed) { setError(check.reason ?? 'Cannot archive.'); return; }
         if (!confirm(`Archive ${t.full_name}? They won't be able to log in.`)) return;
-        data.archiveTeacher(t.id);
-        logAction('admin', 'archive_teacher', t.id, 'active', 'archived');
+        try {
+            data.archiveTeacher(t.id, actor);
+            logAction(actor.full_name, 'archive_teacher', t.id, 'active', 'archived');
+            setError(null);
+        } catch (e: any) { setError(e.message); }
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-end">
-                <button onClick={() => setShowAdd(!showAdd)}
-                    className="px-5 py-2 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors">
-                    + Add Teacher
-                </button>
-            </div>
-            {showAdd && (
-                <div className="bg-primary-50 rounded-2xl border border-primary-200 p-6 space-y-4 animate-fade-in">
-                    <input type="text" placeholder="Full name" value={newName} onChange={e => setNewName(e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border border-primary-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
-                    <div className="flex gap-4">
-                        <label className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer ${newRole === 'teacher' ? 'border-primary-500 bg-primary-100 font-bold text-primary-800' : 'border-neutral-200 text-neutral-600'}`}>
-                            <input type="radio" name="role" value="teacher" checked={newRole === 'teacher'} onChange={() => setNewRole('teacher')} /> Teacher
-                        </label>
-                        <label className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer ${newRole === 'admin' ? 'border-primary-500 bg-primary-100 font-bold text-primary-800' : 'border-neutral-200 text-neutral-600'}`}>
-                            <input type="radio" name="role" value="admin" checked={newRole === 'admin'} onChange={() => setNewRole('admin')} /> Admin
-                        </label>
+        <div className="space-y-8">
+            {error && (
+                <div className="bg-error-50 border border-error-200 text-error-700 font-medium px-4 py-3 rounded-xl text-sm flex justify-between">
+                    {error}
+                    <button onClick={() => setError(null)} className="ml-4 text-error-400 hover:text-error-600">✕</button>
+                </div>
+            )}
+
+            {/* Edit Teacher Modal */}
+            {editingTeacher && (
+                <Modal
+                    title={`Edit: ${editingTeacher.full_name}`}
+                    onClose={() => setEditingTeacher(null)}
+                    footer={
+                        <>
+                            <button onClick={() => setEditingTeacher(null)}
+                                className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">
+                                Cancel
+                            </button>
+                            <button onClick={handleSaveEdit} disabled={!editTeacherName.trim()}
+                                className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-bold rounded-xl hover:bg-primary-700">
+                                Save
+                            </button>
+                        </>
+                    }
+                >
+                    <div>
+                        <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Full Name</label>
+                        <input type="text" value={editTeacherName} onChange={e => setEditTeacherName(e.target.value)}
+                            className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
                     </div>
-                    <div className="flex gap-3">
-                        <button onClick={handleAdd} disabled={!newName.trim()} className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 text-white font-bold rounded-xl hover:bg-primary-700">Save</button>
-                        <button onClick={() => setShowAdd(false)} className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl">Cancel</button>
+                </Modal>
+            )}
+
+            {/* ===== Teachers Section ===== */}
+            <div>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-neutral-900">Teachers</h2>
+                    <button onClick={() => setShowAddTeacher(true)}
+                        className="px-5 py-2 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors">
+                        + Add Teacher
+                    </button>
+                </div>
+
+                {showAddTeacher && (
+                    <Modal title="Add Teacher" onClose={() => { setShowAddTeacher(false); resetAddTeacher(); }}
+                        maxWidth="max-w-lg"
+                        footer={
+                            <>
+                                <button onClick={() => { setShowAddTeacher(false); resetAddTeacher(); }}
+                                    className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">Cancel</button>
+                                <button onClick={handleAddTeacher}
+                                    disabled={!newTeacherName.trim() || !newTeacherUsername.trim() || !newTeacherPassword}
+                                    className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-bold rounded-xl hover:bg-primary-700">Save</button>
+                            </>
+                        }>
+                        <div className="space-y-4">
+                            {addTeacherError && (
+                                <div className="bg-error-50 border border-error-200 text-error-700 font-medium px-4 py-3 rounded-xl text-sm">
+                                    {addTeacherError}
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Full Name</label>
+                                <input type="text" placeholder="Full name" value={newTeacherName}
+                                    onChange={e => {
+                                        setNewTeacherName(e.target.value);
+                                        if (!teacherUsernameEdited)
+                                            setNewTeacherUsername(e.target.value.trim().toLowerCase().replace(/\s+/g, '.'));
+                                    }}
+                                    className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Username</label>
+                                <input type="text" placeholder="e.g. john.doe" value={newTeacherUsername}
+                                    onChange={e => { setNewTeacherUsername(e.target.value); setTeacherUsernameEdited(true); }}
+                                    className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none font-mono" />
+                                <p className="text-xs text-neutral-400 mt-1">Auto-generated from name. You may customize it.</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Password</label>
+                                <input type="password" placeholder="Min 6 characters" value={newTeacherPassword}
+                                    onChange={e => setNewTeacherPassword(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Confirm Password</label>
+                                <input type="password" placeholder="Repeat password" value={newTeacherConfirmPw}
+                                    onChange={e => setNewTeacherConfirmPw(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                            </div>
+                        </div>
+                    </Modal>
+                )}
+
+                <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-neutral-50 border-b border-neutral-100">
+                                <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Name</th>
+                                <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Username</th>
+                                <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Roster</th>
+                                <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-neutral-100">
+                            {teacherAccounts.length === 0 && (
+                                <tr><td colSpan={4} className="px-4 py-6 text-center text-neutral-400">No teachers yet.</td></tr>
+                            )}
+                            {teacherAccounts.map(t => {
+                                const teacherEnrollments = enrollments.filter(e => e.teacher_id === t.id);
+                                const bySubject = subjects.map(sub => ({
+                                    subject: sub,
+                                    count: teacherEnrollments.filter(e => e.subject_id === sub.id).length,
+                                })).filter(x => x.count > 0);
+                                const canManage = canManageStaff(actor.role, t.role);
+                                return (
+                                    <tr key={t.id} className={`hover:bg-neutral-50 ${t.archived ? 'opacity-50' : ''}`}>
+                                        <td className="px-4 py-3">
+                                            <span className="font-semibold text-neutral-800">{t.full_name}</span>
+                                            {t.archived && <span className="ml-2 text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded">Archived</span>}
+                                        </td>
+                                        <td className="px-4 py-3 text-sm text-neutral-500 font-mono">{t.username}</td>
+                                        <td className="px-4 py-3">
+                                            {bySubject.length === 0 ? (
+                                                <span className="text-xs text-neutral-400">No assignments</span>
+                                            ) : (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {bySubject.map(({ subject, count }) => (
+                                                        <span key={subject.id} className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded font-medium">
+                                                            {subject.name}: {count}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex gap-2 flex-wrap">
+                                                {!t.archived && (
+                                                    <button onClick={() => setRosterTeacher(t)} className={btnRoster}>Manage Roster</button>
+                                                )}
+                                                {!t.archived && canManage && (
+                                                    <button onClick={() => { setEditingTeacher(t); setEditTeacherName(t.full_name); }} className={btnEdit}>Edit</button>
+                                                )}
+                                                {!t.archived && canManage && (
+                                                    <button onClick={() => handleArchive(t)} className={btnDanger}>Archive</button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* ===== Administrators Section (super_admin only) ===== */}
+            {isSuperAdmin && (
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold text-neutral-900">Administrators</h2>
+                        <button onClick={() => setShowAddAdmin(true)}
+                            className="px-5 py-2 bg-neutral-800 text-white font-bold rounded-xl hover:bg-neutral-900 transition-colors">
+                            + Add Administrator
+                        </button>
+                    </div>
+
+                    {showAddAdmin && (
+                        <Modal title="Add Administrator" onClose={() => { setShowAddAdmin(false); resetAddAdmin(); }}
+                            maxWidth="max-w-lg"
+                            footer={
+                                <>
+                                    <button onClick={() => { setShowAddAdmin(false); resetAddAdmin(); }}
+                                        className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">Cancel</button>
+                                    <button onClick={handleAddAdmin}
+                                        disabled={!newAdminName.trim() || !newAdminUsername.trim() || !newAdminPassword}
+                                        className="px-5 py-2 bg-neutral-800 disabled:bg-neutral-300 text-white font-bold rounded-xl hover:bg-neutral-900">Save</button>
+                                </>
+                            }>
+                            <div className="space-y-4">
+                                {addAdminError && (
+                                    <div className="bg-error-50 border border-error-200 text-error-700 font-medium px-4 py-3 rounded-xl text-sm">
+                                        {addAdminError}
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Full Name</label>
+                                    <input type="text" placeholder="Full name" value={newAdminName}
+                                        onChange={e => {
+                                            setNewAdminName(e.target.value);
+                                            if (!adminUsernameEdited)
+                                                setNewAdminUsername(e.target.value.trim().toLowerCase().replace(/\s+/g, '.'));
+                                        }}
+                                        className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-neutral-700 mb-2">Role</label>
+                                    <div className="flex gap-3">
+                                        {(['admin', 'super_admin'] as const).map(r => (
+                                            <label key={r} className={`flex items-center gap-2 px-4 py-2 rounded-xl border cursor-pointer flex-1 ${newAdminRole === r ? 'border-primary-500 bg-primary-50 font-bold text-primary-800' : 'border-neutral-200 text-neutral-600'}`}>
+                                                <input type="radio" name="adminRole" value={r} checked={newAdminRole === r} onChange={() => setNewAdminRole(r)} /> {r === 'admin' ? 'Admin' : 'Super Admin'}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Username</label>
+                                    <input type="text" placeholder="e.g. admin.doe" value={newAdminUsername}
+                                        onChange={e => { setNewAdminUsername(e.target.value); setAdminUsernameEdited(true); }}
+                                        className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none font-mono" />
+                                    <p className="text-xs text-neutral-400 mt-1">Auto-generated from name. You may customize it.</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Password</label>
+                                    <input type="password" placeholder="Min 6 characters" value={newAdminPassword}
+                                        onChange={e => setNewAdminPassword(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Confirm Password</label>
+                                    <input type="password" placeholder="Repeat password" value={newAdminConfirmPw}
+                                        onChange={e => setNewAdminConfirmPw(e.target.value)}
+                                        className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                                </div>
+                            </div>
+                        </Modal>
+                    )}
+
+                    <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-neutral-50 border-b border-neutral-100">
+                                    <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Name</th>
+                                    <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Role</th>
+                                    <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Username</th>
+                                    <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100">
+                                {adminAccounts.length === 0 && (
+                                    <tr><td colSpan={4} className="px-4 py-6 text-center text-neutral-400">No administrators.</td></tr>
+                                )}
+                                {adminAccounts.map(t => {
+                                    const check = canArchiveStaff(actor, t, allTeachers);
+                                    return (
+                                        <tr key={t.id} className={`hover:bg-neutral-50 ${t.archived ? 'opacity-50' : ''}`}>
+                                            <td className="px-4 py-3">
+                                                <span className="font-semibold text-neutral-800">{t.full_name}</span>
+                                                {t.id === actor.id && <span className="ml-2 text-xs bg-primary-50 text-primary-600 px-2 py-0.5 rounded">You</span>}
+                                                {t.archived && <span className="ml-2 text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded">Archived</span>}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className={`text-xs font-bold px-2 py-1 rounded ${t.role === 'super_admin' ? 'bg-error-50 text-error-700' : 'bg-warning-50 text-warning-700'}`}>
+                                                    {t.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-neutral-500 font-mono">{t.username}</td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex gap-2">
+                                                    {!t.archived && canManageStaff(actor.role, t.role) && (
+                                                        <button onClick={() => { setEditingTeacher(t); setEditTeacherName(t.full_name); }} className={btnEdit}>Edit</button>
+                                                    )}
+                                                    {!t.archived && check.allowed && (
+                                                        <button onClick={() => handleArchive(t)} className={btnDanger}>Archive</button>
+                                                    )}
+                                                    {!t.archived && !check.allowed && t.id !== actor.id && (
+                                                        <span className="text-xs text-neutral-300" title={check.reason}>—</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
 
-            <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead>
-                        <tr className="bg-neutral-50 border-b border-neutral-100">
-                            <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Name</th>
-                            <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Role</th>
-                            <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Roster (per subject)</th>
-                            <th className="px-4 py-3 text-xs text-neutral-500 uppercase font-semibold">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-100">
-                        {teachers.map(t => {
-                            const teacherEnrollments = enrollments.filter(e => e.teacher_id === t.id);
-                            const bySubject = subjects.map(sub => ({
-                                subject: sub,
-                                students: teacherEnrollments.filter(e => e.subject_id === sub.id).map(e => students.find(s => s.id === e.student_id)?.full_name ?? e.student_id),
-                            })).filter(x => x.students.length > 0);
-                            return (
-                                <tr key={t.id} className={`hover:bg-neutral-50 ${t.archived ? 'opacity-50' : ''}`}>
-                                    <td className="px-4 py-3">
-                                        <span className="font-semibold text-neutral-800">{t.full_name}</span>
-                                        {t.archived && <span className="ml-2 text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded">Archived</span>}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className={`text-xs font-bold px-2 py-1 rounded ${t.role === 'admin' || t.role === 'super_admin' ? 'bg-error-50 text-error-700' : 'bg-primary-50 text-primary-700'}`}>{t.role}</span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {bySubject.length === 0 ? (
-                                            <span className="text-xs text-neutral-400">No assignments</span>
-                                        ) : (
-                                            <div className="space-y-1">
-                                                {bySubject.map(({ subject, students: studs }) => (
-                                                    <div key={subject.id} className="text-xs">
-                                                        <span className="font-semibold text-primary-700">{subject.name}:</span>
-                                                        <span className="text-neutral-600 ml-1">{studs.join(', ')}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {!t.archived && (
-                                            <button onClick={() => handleArchive(t)} className="text-neutral-500 hover:text-error-600 text-xs font-semibold">Archive</button>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-            </div>
+            {rosterTeacher && (
+                <RosterModal teacher={rosterTeacher} actor={actor} onClose={() => setRosterTeacher(null)} />
+            )}
         </div>
     );
 }
 
-// ===== Subjects CRUD (§7.3) =====
+// ===== Subjects CRUD =====
 function SubjectsView() {
     const data = useData();
+    const { session } = useAuth();
     const subjects = data.getSubjects(true);
     const [showAdd, setShowAdd] = useState(false);
     const [newName, setNewName] = useState('');
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
     const [editName, setEditName] = useState('');
 
     const handleAdd = () => {
         if (!newName.trim()) return;
         const subject = data.addSubject({ name: newName.trim(), archived: false });
-        logAction('admin', 'add_subject', subject.id, undefined, newName.trim());
+        logAction(session?.full_name ?? 'admin', 'add_subject', subject.id, undefined, newName.trim());
         setNewName(''); setShowAdd(false);
     };
 
     const handleArchive = (s: Subject) => {
         if (!confirm(`Archive "${s.name}"? ⚠️ This removes a whole stream from everyone and reshuffles the board mid-month!`)) return;
         data.archiveSubject(s.id);
-        logAction('admin', 'archive_subject', s.id, 'active', 'archived');
+        logAction(session?.full_name ?? 'admin', 'archive_subject', s.id, 'active', 'archived');
     };
 
     const handleRename = () => {
-        if (!editingId || !editName.trim()) return;
-        const before = subjects.find(s => s.id === editingId)?.name;
-        data.updateSubject(editingId, { name: editName.trim() });
-        logAction('admin', 'rename_subject', editingId, before, editName.trim());
-        setEditingId(null);
+        if (!editingSubject || !editName.trim()) return;
+        data.updateSubject(editingSubject.id, { name: editName.trim() });
+        logAction(session?.full_name ?? 'admin', 'rename_subject', editingSubject.id, editingSubject.name, editName.trim());
+        setEditingSubject(null);
     };
 
     return (
         <div className="space-y-6">
             <div className="flex justify-end">
-                <button onClick={() => setShowAdd(!showAdd)}
+                <button onClick={() => setShowAdd(true)}
                     className="px-5 py-2 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors">
                     + Add Subject
                 </button>
             </div>
+
             {showAdd && (
-                <div className="bg-primary-50 rounded-2xl border border-primary-200 p-6 space-y-4 animate-fade-in">
-                    <input type="text" placeholder="Subject name" value={newName} onChange={e => setNewName(e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border border-primary-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
-                    <div className="flex gap-3">
-                        <button onClick={handleAdd} disabled={!newName.trim()} className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 text-white font-bold rounded-xl hover:bg-primary-700">Save</button>
-                        <button onClick={() => setShowAdd(false)} className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl">Cancel</button>
+                <Modal title="Add Subject" onClose={() => { setShowAdd(false); setNewName(''); }}
+                    footer={
+                        <>
+                            <button onClick={() => { setShowAdd(false); setNewName(''); }}
+                                className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">Cancel</button>
+                            <button onClick={handleAdd} disabled={!newName.trim()}
+                                className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 text-white font-bold rounded-xl hover:bg-primary-700">Save</button>
+                        </>
+                    }>
+                    <div>
+                        <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Subject Name</label>
+                        <input type="text" placeholder="e.g. Mathematics" value={newName} onChange={e => setNewName(e.target.value)}
+                            className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
                     </div>
-                </div>
+                </Modal>
+            )}
+
+            {editingSubject && (
+                <Modal title="Rename Subject" onClose={() => setEditingSubject(null)}
+                    footer={
+                        <>
+                            <button onClick={() => setEditingSubject(null)}
+                                className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">Cancel</button>
+                            <button onClick={handleRename} disabled={!editName.trim()}
+                                className="px-5 py-2 bg-primary-600 disabled:bg-neutral-300 text-white font-bold rounded-xl hover:bg-primary-700">Save</button>
+                        </>
+                    }>
+                    <div>
+                        <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Subject Name</label>
+                        <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                            className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
+                    </div>
+                </Modal>
             )}
 
             <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
@@ -557,18 +1003,7 @@ function SubjectsView() {
                     <tbody className="divide-y divide-neutral-100">
                         {subjects.map(s => (
                             <tr key={s.id} className={`hover:bg-neutral-50 ${s.archived ? 'opacity-50' : ''}`}>
-                                <td className="px-4 py-3">
-                                    {editingId === s.id ? (
-                                        <div className="flex gap-2">
-                                            <input type="text" value={editName} onChange={e => setEditName(e.target.value)}
-                                                className="px-2 py-1 rounded border border-neutral-300 text-sm w-40" />
-                                            <button onClick={handleRename} className="text-primary-600 text-sm font-bold">Save</button>
-                                            <button onClick={() => setEditingId(null)} className="text-neutral-400 text-sm">Cancel</button>
-                                        </div>
-                                    ) : (
-                                        <span className="font-semibold text-neutral-800">{s.name}</span>
-                                    )}
-                                </td>
+                                <td className="px-4 py-3 font-semibold text-neutral-800">{s.name}</td>
                                 <td className="px-4 py-3">
                                     <span className={`text-xs font-bold px-2 py-1 rounded ${s.archived ? 'bg-neutral-100 text-neutral-500' : 'bg-success-50 text-success-700'}`}>
                                         {s.archived ? 'Archived' : 'Active'}
@@ -577,10 +1012,8 @@ function SubjectsView() {
                                 <td className="px-4 py-3">
                                     {!s.archived && (
                                         <div className="flex gap-2">
-                                            <button onClick={() => { setEditingId(s.id); setEditName(s.name); }}
-                                                className="text-neutral-500 hover:text-primary-600 text-xs font-semibold">Rename</button>
-                                            <button onClick={() => handleArchive(s)}
-                                                className="text-neutral-500 hover:text-error-600 text-xs font-semibold">Archive ⚠️</button>
+                                            <button onClick={() => { setEditingSubject(s); setEditName(s.name); }} className={btnEdit}>Rename</button>
+                                            <button onClick={() => handleArchive(s)} className={btnDanger}>Archive ⚠️</button>
                                         </div>
                                     )}
                                 </td>
@@ -593,9 +1026,10 @@ function SubjectsView() {
     );
 }
 
-// ===== Assessments CRUD & Edit (§7.7) & Bulk Import (§7) =====
+// ===== Assessments CRUD =====
 function AssessmentsView() {
     const data = useData();
+    const { session } = useAuth();
     const assessments = data.getAssessments().sort((a, b) => b.created_at.localeCompare(a.created_at));
     const students = data.getStudents(true);
     const teachers = data.getTeachers(true);
@@ -612,24 +1046,44 @@ function AssessmentsView() {
     const handleSave = () => {
         if (!editingId || !editScores) return;
         data.updateAssessment(editingId, editScores as any);
-        logAction('admin', 'edit_assessment', editingId, 'old_scores', JSON.stringify(editScores));
-        setEditingId(null);
-        setEditScores(null);
+        logAction(session?.full_name ?? 'admin', 'edit_assessment', editingId, 'old_scores', JSON.stringify(editScores));
+        setEditingId(null); setEditScores(null);
     };
 
-    const handleBulkImport = () => {
-        alert("Bulk import stub: This would open a file dialog to parse a CSV of assignments.");
-        logAction('admin', 'bulk_import', 'system');
-    };
+    const scoreKeys = ['homework', 'progress', 'activity', 'attendance', 'behavior'];
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-neutral-100">
                 <p className="text-neutral-500 text-sm">Admins can edit any assessment at any time. Changes trigger stream replay.</p>
-                <button onClick={handleBulkImport} className="px-5 py-2 bg-neutral-800 text-white font-bold rounded-xl hover:bg-neutral-900 transition-colors">
-                    Bulk Import CSV
-                </button>
             </div>
+
+            {editingId && editScores && (
+                <Modal title="Edit Assessment Scores" onClose={() => { setEditingId(null); setEditScores(null); }} maxWidth="max-w-lg"
+                    footer={
+                        <>
+                            <button onClick={() => { setEditingId(null); setEditScores(null); }}
+                                className="px-5 py-2 bg-white border border-neutral-200 text-neutral-600 font-bold rounded-xl hover:bg-neutral-50">Cancel</button>
+                            <button onClick={handleSave}
+                                className="px-5 py-2 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700">Save</button>
+                        </>
+                    }>
+                    <div className="space-y-4">
+                        {scoreKeys.map(k => (
+                            <div key={k} className="flex items-center gap-4">
+                                <label className="w-32 text-sm font-semibold text-neutral-700 capitalize">{k}</label>
+                                <input type="range" min="0" max="10" step="0.5"
+                                    value={editScores[k] ?? 0}
+                                    onChange={e => setEditScores({ ...editScores, [k]: Number(e.target.value) })}
+                                    className="flex-1 h-2 rounded-lg appearance-none cursor-pointer accent-primary-600 bg-primary-100" />
+                                <span className="w-10 text-center font-bold text-sm bg-primary-50 text-primary-800 px-2 py-1 rounded">
+                                    {(editScores[k] ?? 0).toFixed(1)}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </Modal>
+            )}
 
             <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
                 <table className="w-full text-left">
@@ -647,9 +1101,6 @@ function AssessmentsView() {
                             const student = students.find(s => s.id === a.student_id);
                             const subject = subjects.find(s => s.id === a.subject_id);
                             const teacher = teachers.find(t => t.id === a.teacher_id);
-                            const isEditing = editingId === a.id;
-                            const scoreKeys = ['homework', 'progress', 'activity', 'attendance', 'behavior'];
-
                             return (
                                 <tr key={a.id} className="hover:bg-neutral-50">
                                     <td className="px-4 py-3 text-sm font-mono text-neutral-500">
@@ -659,41 +1110,18 @@ function AssessmentsView() {
                                         <div className="font-semibold text-neutral-800">{student?.full_name ?? a.student_id}</div>
                                         <div className="text-xs text-primary-600 font-medium">{subject?.name ?? a.subject_id}</div>
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-neutral-600">
-                                        {teacher?.full_name ?? a.teacher_id}
-                                    </td>
+                                    <td className="px-4 py-3 text-sm text-neutral-600">{teacher?.full_name ?? a.teacher_id}</td>
                                     <td className="px-4 py-3">
-                                        {isEditing ? (
-                                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                                                {scoreKeys.map(k => (
-                                                    <div key={k} className="flex flex-col">
-                                                        <label className="text-[10px] text-neutral-400 uppercase">{k.slice(0, 3)}</label>
-                                                        <input type="number" min="0" max="10" step="0.5"
-                                                            value={editScores?.[k] ?? 0}
-                                                            onChange={e => setEditScores({ ...editScores!, [k]: Number(e.target.value) })}
-                                                            className="w-16 px-1 py-0.5 border rounded text-sm" />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="flex gap-2 text-xs">
-                                                {scoreKeys.map(k => (
-                                                    <span key={k} className="bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded font-mono">
-                                                        {k.slice(0, 1).toUpperCase()}: {(a.scores as any)[k].toFixed(1)}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
+                                        <div className="flex gap-1.5 text-xs flex-wrap">
+                                            {scoreKeys.map(k => (
+                                                <span key={k} className="bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded font-mono">
+                                                    {k.slice(0, 1).toUpperCase()}: {(a.scores as any)[k].toFixed(1)}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        {isEditing ? (
-                                            <div className="flex gap-2 justify-end">
-                                                <button onClick={() => setEditingId(null)} className="text-neutral-500 hover:text-neutral-700 text-xs font-semibold">Cancel</button>
-                                                <button onClick={handleSave} className="text-primary-600 hover:text-primary-800 text-xs font-bold">Save</button>
-                                            </div>
-                                        ) : (
-                                            <button onClick={() => handleEdit(a)} className="text-primary-600 hover:text-primary-700 text-xs font-semibold">Edit</button>
-                                        )}
+                                        <button onClick={() => handleEdit(a)} className={btnEdit}>Edit</button>
                                     </td>
                                 </tr>
                             );
@@ -708,29 +1136,30 @@ function AssessmentsView() {
     );
 }
 
-// ===== Audit Log (§7.8) =====
+// ===== Audit Log =====
 function AuditView() {
+    const log = getAuditLog();
     return (
         <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
             <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
                 <h2 className="font-bold text-neutral-800 text-lg">📋 Audit Log</h2>
-                <span className="text-xs text-neutral-400">{auditLog.length} entries</span>
+                <span className="text-xs text-neutral-400">{log.length} entries</span>
             </div>
-            {auditLog.length === 0 ? (
+            {log.length === 0 ? (
                 <div className="p-8 text-center text-neutral-400">
                     <div className="text-4xl mb-3">🕵️</div>
                     <p>No admin actions recorded yet this session.</p>
                 </div>
             ) : (
                 <div className="divide-y divide-neutral-100 max-h-[500px] overflow-y-auto">
-                    {auditLog.map((entry, i) => (
+                    {log.map((entry, i) => (
                         <div key={i} className="px-6 py-3 hover:bg-neutral-50">
                             <div className="flex justify-between items-center">
                                 <span className="font-semibold text-neutral-800 text-sm">{entry.action}</span>
                                 <span className="text-xs text-neutral-400 font-mono">{new Date(entry.timestamp).toLocaleTimeString()}</span>
                             </div>
                             <div className="text-xs text-neutral-500 mt-1">
-                                Target: <span className="font-mono">{entry.target}</span>
+                                Actor: <span className="font-medium">{entry.actor}</span> · Target: <span className="font-mono">{entry.target}</span>
                                 {entry.before && <> · Before: <span className="text-error-600">{entry.before}</span></>}
                                 {entry.after && <> · After: <span className="text-success-600">{entry.after}</span></>}
                             </div>

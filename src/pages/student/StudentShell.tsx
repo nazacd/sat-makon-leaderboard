@@ -58,11 +58,6 @@ export default function StudentShell() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in">
             {/* Logo + Hero Section */}
             <div className="text-center mb-12">
-                <div className="inline-flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-glow">
-                        <span className="text-white font-black text-lg">SM</span>
-                    </div>
-                </div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 text-primary-700 text-sm font-medium mb-4 shadow-sm border border-primary-100">
                     <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
                     {isShowingPrevious ? `Previous Month · ${previousMonth}` : `Live Rankings · ${currentMonth}`}
@@ -76,13 +71,13 @@ export default function StudentShell() {
                 <p className="mt-3 text-neutral-500 text-lg max-w-2xl mx-auto">
                     {isShowingPrevious
                         ? 'Showing last month\'s final rankings — live board will appear once new assessments arrive.'
-                        : `Tracking performance across ${data.getSubjects().length} subjects with EWMA-weighted ratings.`
+                        : ``
                     }
                 </p>
             </div>
 
             {/* Search — §5.3: full name partial match → profile */}
-            <div className="max-w-lg mx-auto mb-12 relative">
+            <div className="max-w-lg mx-auto mb-16 relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -223,11 +218,11 @@ function PodiumCard({ entry }: { entry: BoardEntry }) {
                 <div className="text-4xl mb-3 filter drop-shadow-sm">{medal}</div>
                 <h3 className="text-xl font-bold text-neutral-800 break-words line-clamp-2">{entry.masked_name}</h3>
             </div>
-            <div className="w-full mt-6 bg-neutral-50 rounded-2xl p-4 text-center border border-neutral-100">
+            <div className="w-full bg-neutral-50 rounded-2xl p-4 text-center border border-neutral-100">
                 <div className="text-primary-700 font-black text-3xl tracking-tight">{entry.rating.toFixed(2)}</div>
                 <div className="text-xs text-neutral-400 mt-1 uppercase tracking-wider font-semibold">Rating</div>
             </div>
-            <div className="mt-4 text-xs text-neutral-400 flex items-center gap-1 font-medium bg-white px-3 py-1 rounded-full shadow-sm border border-neutral-100">
+            <div className="text-xs text-neutral-400 flex items-center gap-1 font-medium bg-white px-3 py-1 rounded-full shadow-sm border border-neutral-100">
                 📋 {entry.assessment_count} Assessments
             </div>
         </Link>

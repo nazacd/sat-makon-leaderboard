@@ -3,7 +3,8 @@
 // Components consume via IDataRepository — never import JSON directly.
 // MOCK ONLY — replace with real backend before launch.
 
-import type { IDataRepository } from '@/services/interfaces';
+import type { IDataRepository, AssignResult } from '@/services/interfaces';
+import { canManageStaff, canArchiveStaff } from '@/services/permissions';
 import type {
     Student,
     Subject,
@@ -30,6 +31,10 @@ const currentMonth: YearMonth = mockData._meta.current_month;
 const previousMonth: YearMonth = mockData._meta.previous_month;
 
 let nextId = 1000; // For generating new IDs
+
+function isUsernameTaken(username: string, excludeId?: string): boolean {
+    return teachers.some((t) => t.username === username && t.id !== excludeId);
+}
 function generateId(prefix: string): string {
     return `${prefix}_${++nextId}`;
 }
@@ -161,20 +166,41 @@ export const mockRepository: IDataRepository = {
         return true;
     },
 
-    addTeacher(data) {
+    addTeacher(data, actor) {
+        if (isUsernameTaken(data.username)) {
+            throw new Error(`Username "${data.username}" is already taken.`);
+        }
+        if (!canManageStaff(actor.role, data.role)) {
+            throw new Error(`Permission denied: cannot create a ${data.role} account.`);
+        }
         const teacher: Teacher = { ...data, id: generateId('tch') };
         teachers = [...teachers, teacher];
         return teacher;
     },
-    updateTeacher(id, updates) {
-        const idx = teachers.findIndex((t) => t.id === id);
-        if (idx === -1) return null;
-        teachers = teachers.map((t) => (t.id === id ? { ...t, ...updates } : t));
+    updateTeacher(id, updates, actor) {
+        const existing = teachers.find((t) => t.id === id);
+        if (!existing) return null;
+        const isSelf = actor.id === id;
+        if (!isSelf && !canManageStaff(actor.role, existing.role)) {
+            throw new Error(`Permission denied: cannot edit a ${existing.role} account.`);
+        }
+        // Self-updates may only change username and password, not role or archived status
+        const safeUpdates: Partial<Teacher> = isSelf
+            ? Object.fromEntries(
+                Object.entries({ username: updates.username, password: updates.password }).filter(([, v]) => v !== undefined)
+              ) as Partial<Teacher>
+            : updates;
+        if (safeUpdates.username !== undefined && isUsernameTaken(safeUpdates.username, id)) {
+            throw new Error(`Username "${safeUpdates.username}" is already taken.`);
+        }
+        teachers = teachers.map((t) => (t.id === id ? { ...t, ...safeUpdates } : t));
         return teachers.find((t) => t.id === id)!;
     },
-    archiveTeacher(id) {
-        const t = teachers.find((t) => t.id === id);
-        if (!t) return false;
+    archiveTeacher(id, actor) {
+        const target = teachers.find((t) => t.id === id);
+        if (!target) return false;
+        const check = canArchiveStaff(actor, target, teachers);
+        if (!check.allowed) throw new Error(check.reason);
         teachers = teachers.map((t) => (t.id === id ? { ...t, archived: true } : t));
         return true;
     },
@@ -197,6 +223,10 @@ export const mockRepository: IDataRepository = {
         return true;
     },
 
+    isUsernameAvailable(username, excludeId?) {
+        return !isUsernameTaken(username, excludeId);
+    },
+
     setEnrollmentTeacher(studentId, subjectId, teacherId) {
         const idx = enrollments.findIndex(
             (e) => e.student_id === studentId && e.subject_id === subjectId
@@ -214,6 +244,27 @@ export const mockRepository: IDataRepository = {
     addEnrollment(enrollment) {
         enrollments = [...enrollments, enrollment];
         return enrollment;
+    },
+    assignStudentToTeacher(studentId, subjectId, teacherId): AssignResult {
+        const existing = enrollments.find(
+            (e) => e.student_id === studentId && e.subject_id === subjectId
+        );
+        if (existing) {
+            const wasReassigned = existing.teacher_id !== null && existing.teacher_id !== teacherId;
+            const previousTeacherId = existing.teacher_id;
+            enrollments = enrollments.map((e) =>
+                e.student_id === studentId && e.subject_id === subjectId
+                    ? { ...e, teacher_id: teacherId }
+                    : e
+            );
+            const updated = enrollments.find(
+                (e) => e.student_id === studentId && e.subject_id === subjectId
+            )!;
+            return { enrollment: updated, wasReassigned, previousTeacherId };
+        }
+        const newEnrollment: Enrollment = { student_id: studentId, subject_id: subjectId, teacher_id: teacherId };
+        enrollments = [...enrollments, newEnrollment];
+        return { enrollment: newEnrollment, wasReassigned: false, previousTeacherId: null };
     },
 };
 

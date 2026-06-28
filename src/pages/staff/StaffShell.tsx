@@ -1,48 +1,25 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useData } from '@/services/DataProvider';
+import { useAuth } from '@/services/AuthProvider';
+import ChangeCredentialsModal from '@/components/ChangeCredentialsModal';
 import type { Teacher, Subject, Student, Enrollment, Scores } from '@/data/types';
 import { CRITERION_LABELS } from '@/data/types';
-import { extractMonth, computeAssessmentMean } from '@/engine';
+import { computeAssessmentMean } from '@/engine';
 
 export default function StaffShell() {
-    const data = useData();
-    const teachers = data.getTeachers();
-    const [loggedInTeacher, setLoggedInTeacher] = useState<Teacher | null>(null);
+    const { session, logout } = useAuth();
     const [deckOpen, setDeckOpen] = useState(false);
 
-    if (!loggedInTeacher) {
-        return (
-            <div className="max-w-4xl mx-auto px-4 py-12 animate-fade-in text-center">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warning-50 text-warning-700 text-sm font-medium mb-6">
-                    <span className="w-2 h-2 rounded-full bg-warning-500 animate-pulse" />
-                    Mock Auth Phase
-                </div>
-                <h1 className="text-4xl font-extrabold text-neutral-900 mb-2">Select a Teacher Profile</h1>
-                <p className="text-neutral-500 mb-8">No self-signup — admin provisions all accounts.</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {teachers.map((t) => (
-                        <button key={t.id} onClick={() => setLoggedInTeacher(t)}
-                            className="bg-white p-5 rounded-2xl shadow-card border border-neutral-100 hover:border-primary-300 hover:shadow-card-hover transition-all text-left flex flex-col items-center group">
-                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                                <span className="text-primary-700 font-bold text-xl">{t.full_name.split(' ').map(n => n[0]).join('')}</span>
-                            </div>
-                            <span className="font-semibold text-neutral-800 text-lg group-hover:text-primary-700">{t.full_name}</span>
-                            <span className="text-neutral-500 text-sm">{t.role}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-        );
-    }
+    const teacher = session as Teacher;
 
     if (deckOpen) {
-        return <MixedSubjectDeck teacher={loggedInTeacher} onBack={() => setDeckOpen(false)} />;
+        return <MixedSubjectDeck teacher={teacher} onBack={() => setDeckOpen(false)} />;
     }
 
     return (
         <TeacherDashboard
-            teacher={loggedInTeacher}
-            onLogout={() => { setLoggedInTeacher(null); setDeckOpen(false); }}
+            teacher={teacher}
+            onLogout={() => { logout(); setDeckOpen(false); }}
             onOpenDeck={() => setDeckOpen(true)}
         />
     );
@@ -73,6 +50,7 @@ function TeacherDashboard({
 
     // State for single-assess (§6.3)
     const [singleAssess, setSingleAssess] = useState<{ student: Student; subject: Subject } | null>(null);
+    const [showCredentials, setShowCredentials] = useState(false);
 
     if (singleAssess) {
         return (
@@ -92,7 +70,7 @@ function TeacherDashboard({
     }
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8 animate-fade-in">
+        <div className="max-w-5xl mx-auto px-4 pt-4 pb-8 animate-fade-in">
             {/* Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-neutral-100 mb-8">
                 <div className="flex items-center gap-4">
@@ -104,8 +82,18 @@ function TeacherDashboard({
                         <p className="text-neutral-500 text-sm">Teacher Dashboard</p>
                     </div>
                 </div>
-                <button onClick={onLogout} className="text-neutral-500 hover:text-error-600 font-medium px-4 py-2">Sign Out</button>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setShowCredentials(true)}
+                        className="px-4 py-2 text-sm font-semibold border border-neutral-200 bg-white text-neutral-600 rounded-xl hover:border-primary-400 hover:text-primary-600 transition-colors">
+                        Change Credentials
+                    </button>
+                    <button onClick={onLogout} className="text-neutral-500 hover:text-error-600 font-medium px-4 py-2">Sign Out</button>
+                </div>
             </div>
+
+            {showCredentials && (
+                <ChangeCredentialsModal teacher={teacher} onClose={() => setShowCredentials(false)} />
+            )}
 
             {/* §6.2: "Assess all my students" button */}
             <button
@@ -184,8 +172,6 @@ function TeacherRecentAssessments({ teacher }: { teacher: Teacher }) {
     if (editingAss) {
         const student = allStudents.find(s => s.id === editingAss.student_id);
         const subject = allSubjects.find(s => s.id === editingAss.subject_id);
-        const keys = ['homework', 'progress', 'activity', 'attendance', 'behavior'] as const;
-
         return (
             <div className="bg-white rounded-3xl shadow-elevated border border-primary-200 overflow-hidden mb-12">
                 <div className="bg-neutral-50 px-8 py-6 border-b border-neutral-100">
