@@ -221,6 +221,7 @@ function StudentsView() {
     const [editingStudent, setEditingStudent] = useState<Student | null>(null);
     const [editName, setEditName] = useState('');
     const [editTeacherMap, setEditTeacherMap] = useState<Record<string, string | null>>({});
+    const [enrolledSubjectIds, setEnrolledSubjectIds] = useState<Set<string>>(new Set());
 
     const [filter, setFilter] = useState('');
     const filteredStudents = students.filter(s => s.full_name.toLowerCase().includes(filter.toLowerCase()));
@@ -254,11 +255,14 @@ function StudentsView() {
 
     const openEditModal = (s: Student) => {
         const enrs = data.getEnrollmentsForStudent(s.id);
+        const enrolledIds = new Set(enrs.map(e => e.subject_id));
         const map: Record<string, string | null> = {};
+        for (const sub of subjects) map[sub.id] = null;
         for (const e of enrs) map[e.subject_id] = e.teacher_id;
         setEditingStudent(s);
         setEditName(s.full_name);
         setEditTeacherMap(map);
+        setEnrolledSubjectIds(enrolledIds);
     };
 
     const handleMakeEligibleNow = () => {
@@ -281,13 +285,23 @@ function StudentsView() {
         // Persist teacher assignment changes
         const original = data.getEnrollmentsForStudent(editingStudent.id);
         for (const [subjectId, newTid] of Object.entries(editTeacherMap)) {
-            const origTid = original.find(e => e.subject_id === subjectId)?.teacher_id ?? null;
-            if (newTid !== origTid) {
-                data.setEnrollmentTeacher(editingStudent.id, subjectId, newTid);
-                const prevTname = origTid ? (data.getTeacher(origTid)?.full_name ?? origTid) : 'Unassigned';
-                const newTname = newTid ? (data.getTeacher(newTid)?.full_name ?? newTid) : 'Unassigned';
-                logAction(session?.full_name ?? 'admin', 'reassign_teacher',
-                    `${editingStudent.full_name}/${subjectId}`, prevTname, newTname);
+            const wasEnrolled = enrolledSubjectIds.has(subjectId);
+            const subName = subjects.find(s => s.id === subjectId)?.name ?? subjectId;
+            if (!wasEnrolled && newTid !== null) {
+                // New enrollment — student was not in this subject before
+                data.assignStudentToTeacher(editingStudent.id, subjectId, newTid);
+                const newTname = data.getTeacher(newTid)?.full_name ?? newTid;
+                logAction(session?.full_name ?? 'admin', 'add_enrollment',
+                    `${editingStudent.full_name}/${subName}`, undefined, newTname);
+            } else if (wasEnrolled) {
+                const origTid = original.find(e => e.subject_id === subjectId)?.teacher_id ?? null;
+                if (newTid !== origTid) {
+                    data.setEnrollmentTeacher(editingStudent.id, subjectId, newTid);
+                    const prevTname = origTid ? (data.getTeacher(origTid)?.full_name ?? origTid) : 'Unassigned';
+                    const newTname = newTid ? (data.getTeacher(newTid)?.full_name ?? newTid) : 'Unassigned';
+                    logAction(session?.full_name ?? 'admin', 'reassign_teacher',
+                        `${editingStudent.full_name}/${subName}`, prevTname, newTname);
+                }
             }
         }
 
@@ -395,15 +409,16 @@ function StudentsView() {
                                 className="w-full px-4 py-2 rounded-xl border border-neutral-200 focus:ring-2 focus:ring-primary-500 focus:outline-none" />
                         </div>
 
-                        {Object.keys(editTeacherMap).length > 0 && (
+                        {subjects.length > 0 && (
                             <div>
                                 <label className="block text-sm font-semibold text-neutral-700 mb-2">Teacher Assignments</label>
                                 <div className="space-y-2">
                                     {subjects.map(sub => {
-                                        if (!Object.prototype.hasOwnProperty.call(editTeacherMap, sub.id)) return null;
+                                        const isEnrolled = enrolledSubjectIds.has(sub.id);
                                         return (
-                                            <div key={sub.id} className="flex items-center gap-3 p-3 rounded-xl border border-neutral-100 bg-neutral-50">
+                                            <div key={sub.id} className={`flex items-center gap-3 p-3 rounded-xl border ${isEnrolled ? 'border-neutral-100 bg-neutral-50' : 'border-dashed border-neutral-200 bg-white'}`}>
                                                 <span className="text-sm font-medium text-neutral-700 w-28 shrink-0">{sub.name}</span>
+                                                {!isEnrolled && <span className="text-xs text-neutral-400 italic shrink-0">not enrolled</span>}
                                                 <select
                                                     value={editTeacherMap[sub.id] ?? ''}
                                                     onChange={e => setEditTeacherMap(prev => ({
@@ -412,13 +427,16 @@ function StudentsView() {
                                                     }))}
                                                     className="flex-1 bg-white border border-neutral-200 text-neutral-700 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
                                                 >
-                                                    <option value="">— Unassigned —</option>
+                                                    <option value="">— {isEnrolled ? 'Unassigned' : 'Skip'} —</option>
                                                     {teachers.map(t => <option key={t.id} value={t.id}>{t.full_name}</option>)}
                                                 </select>
                                             </div>
                                         );
                                     })}
                                 </div>
+                                {subjects.some(s => !enrolledSubjectIds.has(s.id)) && (
+                                    <p className="text-xs text-neutral-400 mt-2">Selecting a teacher for a non-enrolled subject will enroll the student in it.</p>
+                                )}
                             </div>
                         )}
 
@@ -430,7 +448,7 @@ function StudentsView() {
                                     Overriding sets eligibility to <span className="font-mono font-bold">{currentMonth}</span> immediately — cannot be undone.
                                 </p>
                                 <button onClick={handleMakeEligibleNow}
-                                    className="px-4 py-2 text-sm font-bold rounded-lg bg-warning-600 hover:bg-warning-700 text-white transition-colors">
+                                    className="px-4 py-2 text-sm font-bold rounded-lg bg-warning-600 hover:text-white hover:bg-warning-700 text-gray transition-colors">
                                     Make Eligible Now
                                 </button>
                             </div>
