@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/services/AuthProvider';
 import LoginPage from '@/pages/LoginPage';
-import type { StaffRole } from '@/data/types';
+import type { StaffRole } from '@shared/types';
 
 interface RequireRoleProps {
     allowedRoles: StaffRole[];

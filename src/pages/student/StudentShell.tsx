@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useData } from '@/services/DataProvider';
-import { buildMainBoard } from '@/engine';
-import type { BoardEntry } from '@/data/types';
+import { buildMainBoard } from '@shared/engine';
+import type { BoardEntry } from '@shared/types';
 
 export default function StudentShell() {
     const data = useData();

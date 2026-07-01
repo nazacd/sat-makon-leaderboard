@@ -3,7 +3,7 @@
 // Values are loaded from the mock data's config block via the data layer.
 // Never hardcode these inline in components or engine logic.
 
-import type { Config } from '@/data/types';
+import type { Config } from '../types';
 
 /** Default config values matching §9 of the spec */
 export const DEFAULT_CONFIG: Config = {

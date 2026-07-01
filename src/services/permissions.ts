@@ -1,4 +1,4 @@
-import type { StaffRole, Teacher } from '@/data/types';
+import type { StaffRole, Teacher } from '@shared/types';
 
 export const canAccessAdmin = (role: StaffRole): boolean =>
     role === 'admin' || role === 'super_admin';

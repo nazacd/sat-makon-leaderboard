@@ -5,7 +5,7 @@
 import { createContext, useContext, type ReactNode } from 'react';
 import type { IDataRepository } from '@/services/interfaces';
 import { mockRepository } from '@/services/mock';
-import { initConfig } from '@/config';
+import { initConfig } from '@shared/config';
 
 // Initialize config from the data layer at boot
 initConfig(mockRepository.getConfig());

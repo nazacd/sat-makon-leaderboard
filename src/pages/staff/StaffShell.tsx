@@ -2,9 +2,9 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { useData } from '@/services/DataProvider';
 import { useAuth } from '@/services/AuthProvider';
 import ChangeCredentialsModal from '@/components/ChangeCredentialsModal';
-import type { Teacher, Subject, Student, Enrollment, Scores } from '@/data/types';
-import { CRITERION_LABELS } from '@/data/types';
-import { computeAssessmentMean } from '@/engine';
+import type { Teacher, Subject, Student, Enrollment, Scores } from '@shared/types';
+import { CRITERION_LABELS } from '@shared/types';
+import { computeAssessmentMean } from '@shared/engine';
 
 export default function StaffShell() {
     const { session, logout } = useAuth();

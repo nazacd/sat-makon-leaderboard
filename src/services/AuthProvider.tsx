@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useData } from '@/services/DataProvider';
-import type { Teacher } from '@/data/types';
+import type { Teacher } from '@shared/types';
 
 interface AuthContextValue {
     session: Teacher | null;

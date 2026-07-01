@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useData } from '@/services/DataProvider';
 import { logAction } from '@/services/auditLog';
-import type { Teacher } from '@/data/types';
+import type { Teacher } from '@shared/types';
 
 interface Props {
     teacher: Teacher;

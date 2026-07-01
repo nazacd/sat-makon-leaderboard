@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Modal from '@/components/Modal';
 import { useData } from '@/services/DataProvider';
 import { logAction } from '@/services/auditLog';
-import type { Teacher } from '@/data/types';
+import type { Teacher } from '@shared/types';
 
 interface Props {
     teacher: Teacher;

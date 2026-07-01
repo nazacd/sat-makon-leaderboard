@@ -17,7 +17,7 @@ import type {
     Scores,
     YearMonth,
     CriterionKey,
-} from '@/data/types';
+} from '../types';
 
 // ===== §3.1 — Assessment Mean =====
 

@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useData } from '@/services/DataProvider';
 import { useAuth } from '@/services/AuthProvider';
-import { buildMainBoard, formatFailureReason, computeEligibilityStart } from '@/engine';
+import { buildMainBoard, formatFailureReason, computeEligibilityStart } from '@shared/engine';
 import { canManageStaff, canArchiveStaff } from '@/services/permissions';
 import Modal from '@/components/Modal';
 import ChangeCredentialsModal from '@/components/ChangeCredentialsModal';
 import { logAction, getAuditLog } from '@/services/auditLog';
-import type { Teacher, Student, Subject } from '@/data/types';
+import type { Teacher, Student, Subject } from '@shared/types';
 import RosterModal from '@/pages/admin/RosterModal';
 
 // ===== Shared button style helpers =====

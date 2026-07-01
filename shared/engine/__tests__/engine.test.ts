@@ -24,7 +24,7 @@ import {
     extractMonth,
     formatFailureReason,
 } from '../index';
-import seedData from '@/data/satmakon-mock-data.json';
+import seedData from '../../../src/data/satmakon-mock-data.json';
 import type {
     Assessment,
     Config,
@@ -32,7 +32,7 @@ import type {
     Enrollment,
     Scores,
     BoardEntry,
-} from '@/data/types';
+} from '../../types';
 
 // ===== Test Config (§9 defaults) =====
 const CONFIG: Config = {
@@ -478,7 +478,7 @@ describe('sortBoard', () => {
 
 // ===== Full Board Against Seed Data Edge Cases =====
 describe('buildMainBoard with seed data', () => {
-    const mockData = seedData as unknown as import('@/data/types').MockDataFile;
+    const mockData = seedData as unknown as import('../../types').MockDataFile;
 
     const students = mockData.students;
     const enrollments = mockData.enrollments;

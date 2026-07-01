@@ -12,7 +12,7 @@ import type {
     Config,
     YearMonth,
     Scores,
-} from '@/data/types';
+} from '@shared/types';
 
 export interface AssignResult {
     enrollment: Enrollment;

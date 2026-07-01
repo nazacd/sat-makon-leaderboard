@@ -15,7 +15,7 @@ import type {
     YearMonth,
     Scores,
     MockDataFile,
-} from '@/data/types';
+} from '@shared/types';
 import mockDataJson from '@/data/satmakon-mock-data.json';
 
 const mockData = mockDataJson as unknown as MockDataFile;

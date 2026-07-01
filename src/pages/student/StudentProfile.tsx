@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useData } from '@/services/DataProvider';
-import { buildMainBoard, computePlainMonthAverage, computeAssessmentMean } from '@/engine';
-import type { Assessment } from '@/data/types';
-import { CRITERION_LABELS } from '@/data/types';
+import { buildMainBoard, computePlainMonthAverage, computeAssessmentMean } from '@shared/engine';
+import type { Assessment } from '@shared/types';
+import { CRITERION_LABELS } from '@shared/types';
 
 export default function StudentProfile() {
     const { id } = useParams<{ id: string }>();
