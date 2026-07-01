@@ -6,9 +6,11 @@
     "strict": true,
     "outDir": "dist",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "paths": {
       "@shared/*": ["../shared/*"]
     }
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "prisma/**/*.ts"]
 }

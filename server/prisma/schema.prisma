@@ -1,0 +1,114 @@
+// ===== SAT-MAKON Prisma Schema =====
+// Source of truth: spec §10 (Data model)
+// Assessments are append-only; corrections are new records or logged edits.
+// Nothing is ever hard-deleted — archive (soft-delete) only.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Enums =====
+
+enum EnrollmentStatus {
+  new
+  established
+}
+
+enum StaffRole {
+  teacher
+  admin
+  super_admin
+}
+
+// ===== Entities =====
+
+model Student {
+  id                String           @id
+  full_name         String
+  enrollment_date   DateTime         @db.Date
+  enrollment_status EnrollmentStatus
+  eligibility_start String           // YYYY-MM; stored + admin-overridable (§4.1)
+  archived          Boolean          @default(false)
+
+  enrollments Enrollment[]
+  assessments Assessment[]
+}
+
+model Subject {
+  id       String  @id
+  name     String
+  archived Boolean @default(false)
+
+  enrollments Enrollment[]
+  assessments Assessment[]
+}
+
+model Teacher {
+  id            String    @id
+  full_name     String
+  username      String    @unique
+  password_hash String
+  role          StaffRole
+  archived      Boolean   @default(false)
+
+  enrollments Enrollment[]
+  assessments Assessment[]
+  audit_logs  AuditLog[]
+}
+
+// Enrollment = (student, subject) with optional teacher (§7.4)
+// Unique on (student_id, subject_id); null teacher_id → Unassigned view (§7.5)
+model Enrollment {
+  student_id String
+  subject_id String
+  teacher_id String?
+
+  student Student  @relation(fields: [student_id], references: [id])
+  subject Subject  @relation(fields: [subject_id], references: [id])
+  teacher Teacher? @relation(fields: [teacher_id], references: [id])
+
+  @@id([student_id, subject_id])
+}
+
+// Assessment is immutable source of truth (§3.4)
+// Corrections are new records; originals traceable via audit_log
+model Assessment {
+  id         String   @id @default(uuid())
+  student_id String
+  subject_id String
+  teacher_id String
+  created_at DateTime @db.Timestamptz
+  month      String   // YYYY-MM (Tashkent time); stored for efficient filtering
+
+  // Five criterion scores — each 0–10 in 0.5 steps (§3.1)
+  homework   Float
+  progress   Float
+  activity   Float
+  attendance Float
+  behavior   Float
+
+  student Student @relation(fields: [student_id], references: [id])
+  subject Subject @relation(fields: [subject_id], references: [id])
+  teacher Teacher @relation(fields: [teacher_id], references: [id])
+
+  @@index([student_id, subject_id, month])
+  @@index([month])
+}
+
+// Audit log for admin actions (§7.8)
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actor_id   String
+  action     String
+  target     String
+  before     String?
+  after      String?
+  created_at DateTime @default(now())
+
+  actor Teacher @relation(fields: [actor_id], references: [id])
+}
